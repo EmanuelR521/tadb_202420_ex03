@@ -1,0 +1,16 @@
+id;nombre;simbolo;numero_atomico;config_electronica;elemento_uuid
+1;Hidrógeno;H;1;1s1;f47c7bb2-2b9d-4c6e-a6f3-903f3a0c52d9
+2;Helio;He;2;1s2;adfebfe3-11b8-4cb9-b2e7-6c9a9a1f8e8f
+3;Litio;Li;3;1s2 2s1;3bb4f8fa-9a8d-4ae1-ae34-380e1fd736b1
+4;Berilio;Be;4;1s2 2s2;da1b3f83-c7b9-409d-89c1-b82c6ecf4d99
+5;Boro;B;5;1s2 2s2 2p1;9ad78976-b446-4a24-8c47-f70b1bb2d6fa
+6;Carbono;C;6;1s2 2s2 2p2;b3e6ffea-544b-43c6-8c76-13ab090b6b0f
+7;Nitrógeno;N;7;1s2 2s2 2p3;8c8b3e9b-e05f-4a5f-8c43-9b2127680d94
+8;Oxígeno;O;8;1s2 2s2 2p4;3510ccfd-c235-4a9f-b8a9-17c8e9f2284c
+9;Flúor;F;9;1s2 2s2 2p5;a74b8d0a-b7c6-4025-b784-80178ae8d37d
+10;Neón;Ne;10;1s2 2s2 2p6;ea6b1b87-5a3a-4e10-b0d5-b0a393a232cd
+11;Sodio;Na;11;1s2 2s2 2p6 3s1;eb1d6bde-bfc4-45d2-8438-5db0ff2c1c5e
+12;Magnesio;Mg;12;1s2 2s2 2p6 3s2;f9c5354f-e8d5-4ee7-89b5-509238c8019f
+13;Aluminio;Al;13;1s2 2s2 2p6 3s2 3p1;8be56e91-9d1f-4b7e-8f09-fd73a86f1718
+14;Silicio;Si;14;1s2 2s2 2p6 3s2 3p2;013bc6b2-051b-4027-8d8b-e93fd3ff9536
+15;Fósforo;P;15;1s2 2s2 2p6 3s2 3p3;f4742301-b365-4a96-b5e7-3d49fd0b68a5
