@@ -107,13 +107,13 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             if (string.IsNullOrEmpty(unCompuesto.Nombre))
                 return "El nombre del compuesto no puede estar vacío.";
 
-            if (string.IsNullOrEmpty(unCompuesto.Simbolo))
+            if (string.IsNullOrEmpty(unCompuesto.Formula_Quimica))
                 return "El símbolo del compuesto no puede estar vacío.";
 
-            if (unCompuesto.Numero_Atomico <= 0)
+            if (unCompuesto.Masa_Molar <= 0)
                 return "El número atómico del compuesto no puede ser menor o igual a cero.";
 
-            if (string.IsNullOrEmpty(unCompuesto.Config_Electronica))
+            if (string.IsNullOrEmpty(unCompuesto.Estado_Agregacion))
                 return "La configuración electrónica del compuesto no puede estar vacía.";
 
             return string.Empty;

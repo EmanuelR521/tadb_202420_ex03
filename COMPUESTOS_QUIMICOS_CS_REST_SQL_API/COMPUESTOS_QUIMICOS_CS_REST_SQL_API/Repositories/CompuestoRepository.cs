@@ -17,7 +17,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             var conexion = contextoDB.CreateConnection();
 
             string sentenciaSQL =
-                "SELECT compuesto_uuid AS Uuid, nombre, formula FROM core.compuestos WHERE compuesto_uuid = @compuesto_guid";
+                "SELECT uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE Uuid = @compuesto_guid";
 
             var resultadoCompuestos = await conexion
                 .QueryAsync<Compuesto>(sentenciaSQL, new DynamicParameters());
@@ -35,8 +35,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@compuesto_guid", compuestoGuid,
                 DbType.Guid, ParameterDirection.Input);
 
-            string sentenciaSQL = 
-                "SELECT compuesto_uuid AS Uuid, nombre, formula FROM core.compuestos WHERE compuesto_uuid = @compuesto_guid";
+            string sentenciaSQL =
+                "SELECT uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE Uuid = @compuesto_guid";
 
             var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
 
@@ -81,9 +81,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 var parametros = new
                 {
                     p_nombre = compuesto.Nombre,
-                    p_simbolo = compuesto.Simbolo,
-                    p_numero_atomico = compuesto.Numero_Atomico,
-                    p_config_electronica = compuesto.Config_Electronica
+                    p_formula_quimica = compuesto.Formula_Quimica,
+                    p_masa_molar = compuesto.Masa_Molar,
+                    p_estado_agregacion = compuesto.Estado_Agregacion
 
                 };
 
@@ -122,9 +122,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 {
                     p_uuid = unCompuesto.Uuid,
                     p_nombre = unCompuesto.Nombre,
-                    p_simbolo = unCompuesto.Simbolo,
-                    p_numero_atomico = unCompuesto.Numero_Atomico,
-                    p_config_electronica = unCompuesto.Config_Electronica
+                    p_formula_quimica = unCompuesto.Formula_Quimica,
+                    p_masa_molar = unCompuesto.Masa_Molar,
+                    p_estado_agregacion = unCompuesto.Estado_Agregacion
                 };
 
                 var cantidad_filas = await conexion.ExecuteAsync(

@@ -24,10 +24,10 @@ docker run --name postgres-CompuestosQuimicos -e POSTGRES_PASSWORD=unaClav3 -d -
 
 -- Con usuario postgres:
 -- Crear la base de datos
-create database compuestosQuimicos_db;
+create database compuestosquimicos_db;
 
 -- Conectarse a la base de datos
-\c compuestosQuimicos_db;
+\c compuestosquimicos_db;
 
 -- Creamos un esquema para almacenar todo el modelo de datos del dominio
 -- esquema principal
@@ -61,55 +61,53 @@ create extension if not exists "uuid-ossp";
 
 -- Tabla de Elementos
 create table core.elementos (
-    id                  integer generated always as identity constraint elementos_pk primary key,
+    id                  integer generated always as identity primary key,
     nombre              varchar(50) not null,
     simbolo             varchar(5) not null,
     numero_atomico      integer not null,
     config_electronica  varchar(50) not null,
-    elemento_uuid       uuid default gen_random_uuid(),
+    elemento_uuid       uuid default gen_random_uuid() unique,
     constraint nombre_simbolo_uk unique (nombre, simbolo)
-
 );
 
 comment on table core.elementos is 'Tabla que almacena los elementos químicos';
-comment on column core.elementos.id is 'id del elemento';
+comment on column core.elementos.id is 'ID del elemento';
 comment on column core.elementos.nombre is 'Nombre completo del elemento';
 comment on column core.elementos.simbolo is 'Símbolo químico del elemento';
 comment on column core.elementos.numero_atomico is 'Número atómico del elemento';
 comment on column core.elementos.config_electronica is 'Configuración electrónica del elemento';
-comment on column core.elementos.elemento_uuid is 'UUID del elemento para uso por API';
-
+comment on column core.elementos.elemento_uuid is 'UUID del elemento para uso en la API';
 
 -- Tabla de Compuestos
 create table core.compuestos (
-    id                  integer generated always as identity constraint compuestos_pk primary key,
+    id                  integer generated always as identity primary key,
     nombre              varchar(30) not null,
     formula_quimica     varchar(30) not null,
     masa_molar          numeric(6,3) not null,
     estado_agregacion   varchar(30) not null,
-    compuesto_uuid      uuid default gen_random_uuid(),
+    compuesto_uuid      uuid default gen_random_uuid() unique,
     constraint nombre_formula_quimica_uk unique (nombre, formula_quimica)
 );
 
 comment on table core.compuestos is 'Tabla que almacena los compuestos';
-comment on column core.compuestos.id is 'id del compuesto';
+comment on column core.compuestos.id is 'ID del compuesto';
 comment on column core.compuestos.nombre is 'Nombre completo del compuesto';
 comment on column core.compuestos.formula_quimica is 'Fórmula química del compuesto';
 comment on column core.compuestos.masa_molar is 'Masa molar del compuesto en gramos/mol';
 comment on column core.compuestos.estado_agregacion is 'Estado de agregación del compuesto (Ej: sólido, líquido, gaseoso)';
-comment on column core.compuestos.compuesto_uuid is 'UUID del elemento para uso por API';
+comment on column core.compuestos.compuesto_uuid is 'UUID del compuesto para uso en la API';
 
 -- Tabla de elementos por compuestos
 create table core.elementos_por_compuestos (
-    elemento_id  integer not null constraint elementos_fk references core.elementos,
-    compuesto_id integer not null constraint compuestos_fk references core.compuestos,
+    elemento_uuid uuid not null constraint elementos_fk references core.elementos(elemento_uuid),
+    compuesto_uuid uuid not null constraint compuestos_fk references core.compuestos(compuesto_uuid),
     cantidad_atomos integer not null,
-    primary key (elemento_id, compuesto_id)
+    primary key (elemento_uuid, compuesto_uuid)
 );
 
 comment on table core.elementos_por_compuestos is 'Relación de cantidad de átomos de cada elemento en un compuesto';
-comment on column core.elementos_por_compuestos.elemento_id is 'ID del elemento en el compuesto';
-comment on column core.elementos_por_compuestos.compuesto_id is 'ID del compuesto';
+comment on column core.elementos_por_compuestos.elemento_uuid is 'UUID del elemento en el compuesto';
+comment on column core.elementos_por_compuestos.compuesto_uuid is 'UUID del compuesto';
 comment on column core.elementos_por_compuestos.cantidad_atomos is 'Cantidad de átomos del elemento en el compuesto';
 
 
@@ -333,8 +331,7 @@ end; $$;
 -- Creación de Vistas de Consulta
 -- ****************************************
 
---listar los compuestos
--- Vista v_info_compuestos
+-- Vista de compuestos con detalles de elementos
 create or replace view core.v_info_compuestos as
 select
     c.compuesto_uuid,
@@ -349,14 +346,12 @@ select
     epc.cantidad_atomos
 from
     core.compuestos c
-    join core.elementos_por_compuestos epc on c.id = epc.compuesto_id
-    join core.elementos e on epc.elemento_id = e.id;
+    join core.elementos_por_compuestos epc on c.compuesto_uuid = epc.compuesto_uuid
+    join core.elementos e on epc.elemento_uuid = e.elemento_uuid;
 
 comment on view core.v_info_compuestos is 'Vista que muestra cada compuesto con sus elementos y cantidades de átomos';
 
-
--- Listar todos los elementos
--- Vista v_info_elementos
+-- Vista de información de elementos
 create or replace view core.v_info_elementos as
 select
     elemento_uuid,
@@ -367,7 +362,6 @@ select
 from core.elementos;
 
 comment on view core.v_info_elementos is 'Vista que muestra la información básica de cada elemento';
-
 
 
 -- ****************************************
@@ -438,8 +432,9 @@ call core.p_eliminar_compuesto(p_compuesto_uuid := '91463ce4-913c-46ee-ad63-fe82
 select * from core.v_info_elementos;
 
 -- insertamos manualmente la cantidad de atomos "validar que si corresponda el id agua e hidrogeno" 
-INSERT INTO core.elementos_por_compuestos (elemento_id, compuesto_id, cantidad_atomos)
-VALUES (1, 1, 2);
+INSERT INTO core.elementos_por_compuestos (elemento_uuid,compuesto_uuid, cantidad_atomos)
+VALUES ('57f59c7d-9bb6-41de-8510-7ab9a94e8e21', '4a55e56f-54b5-447b-b558-59b15d560184', 2);
+
 
 --ver la atabla elementos por compuesto
 select * from core.elementos_por_compuestos;
