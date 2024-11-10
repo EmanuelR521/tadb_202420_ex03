@@ -10,14 +10,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models
         [JsonPropertyName("nombre")]
         public string? Nombre { get; set; } = string.Empty;
 
-        [JsonPropertyName("formula_quimica")]
-        public string? Formula_Quimica { get; set; } = string.Empty;
+        [JsonPropertyName("simbolo")]
+        public string? Simbolo { get; set; } = string.Empty;
 
-        [JsonPropertyName("masa_molar")]
-        public float Masa_Molar { get; set; } = 0;
+        [JsonPropertyName("numero_atomico")]
+        public int Numero_Atomico { get; set; } = 0;
 
-        [JsonPropertyName("estado_agregacion")]
-        public string? Estado_Agregacion { get; set; } = string.Empty;
+        [JsonPropertyName("config_electronica")]
+        public string? Config_Electronica { get; set; } = string.Empty;
 
     }
 }
