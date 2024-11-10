@@ -6,7 +6,7 @@
 
 -- integrantes
 -- carlos andres sanabria - carlos.sanabria@upb.edu.co - ID: 000493912
--- emanuel rios bolivar - emanuel.riosb@upb.edu.co - ID: 00000000 -------------------------->    corregir
+-- emanuel rios bolivar - emanuel.riosb@upb.edu.co - ID: 000491739
 
 -- ***********************************
 -- Configuración de PostgreSQL en Docker
