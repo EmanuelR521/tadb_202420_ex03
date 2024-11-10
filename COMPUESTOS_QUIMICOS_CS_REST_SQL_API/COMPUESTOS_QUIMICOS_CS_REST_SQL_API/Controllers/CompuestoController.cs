@@ -44,7 +44,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             {
                 var compuestoCreado = await _compuestoService
                     .CreateAsync(unCompuesto);
-                
+
                 return Ok(compuestoCreado);
             }
             catch (AppValidationException error)
@@ -96,4 +96,5 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
                 return BadRequest($"Error de operacion en DB: {error.Message}");
             }
         }
+    }
 }

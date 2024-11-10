@@ -14,7 +14,7 @@ builder.Services.AddSingleton<PgsqlDbContext>();
 //Los repositorios
 //builder.Services.AddScoped<IResumenRepository, ResumenRepository>();
 //builder.Services.AddScoped<IElementoRepository, ElementoRepository>();
-//builder.Services.AddScoped<ICompuestoRepository, CompuestoRepository>();
+builder.Services.AddScoped<ICompuestoRepository, CompuestoRepository>();
 
 //servicios asociados para cada ruta
 //builder.Services.AddScoped<ResumenService>();
