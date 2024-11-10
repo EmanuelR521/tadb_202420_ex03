@@ -16,10 +16,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
         {
             var conexion = contextoDB.CreateConnection();
 
-            string sentenciaSQL = 
-                "SELECT compuesto_uuid AS Uuid, nombre, formula " +
-                "FROM core.compuestos " +
-                "ORDER BY nombre";
+            string sentenciaSQL =
+                "SELECT compuesto_uuid AS Uuid, nombre, formula FROM core.compuestos WHERE compuesto_uuid = @compuesto_guid";
 
             var resultadoCompuestos = await conexion
                 .QueryAsync<Compuesto>(sentenciaSQL, new DynamicParameters());
@@ -38,9 +36,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 DbType.Guid, ParameterDirection.Input);
 
             string sentenciaSQL = 
-                "SELECT compuesto_uuid AS Uuid, nombre, formula " +
-                "FROM core.compuestos " +
-                "WHERE compuesto_uuid = @compuesto_guid";
+                "SELECT compuesto_uuid AS Uuid, nombre, formula FROM core.compuestos WHERE compuesto_uuid = @compuesto_guid";
 
             var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
 
@@ -61,9 +57,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                                     DbType.String, ParameterDirection.Input);
 
             string sentenciaSQL =
-                "SELECT distinct compuestos " +
-                "FROM core.v_info_compuestos " +
-                "WHERE LOWER(compuesto) = LOWER(@compuesto_nombre)";
+                "SELECT distinct compuestos FROM core.v_info_compuestos WHERE LOWER(compuesto) = LOWER(@compuesto_nombre)";
 
             var resultado = await conexion.QueryAsync<string>(sentenciaSQL,
                 parametrosSentencia);
