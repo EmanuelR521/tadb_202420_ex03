@@ -1,81 +1,99 @@
-﻿using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces;
+﻿using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Exceptions;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models;
+using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CompuestoController : ControllerBase
+    public class CompuestoController(CompuestoService compuestoService) : Controller
     {
-        private readonly ICompuestoRepository _compuestoRepository;
+        private readonly CompuestoService _compuestoService = compuestoService;
 
-        public CompuestoController(ICompuestoRepository compuestoRepository)
-        {
-            _compuestoRepository = compuestoRepository;
-        }
 
-        // GET: api/Compuesto
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Compuesto>>> GetAllCompuestos()
+        public async Task<IActionResult> GetAllAsync()
         {
-            var compuestos = await _compuestoRepository.GetAllAsync();
-            return Ok(compuestos);
+            var losCompuestos = await _compuestoService
+                .GetAllAsync();
+
+            return Ok(losCompuestos);
         }
 
-        // GET: api/Compuesto/{uuid}
-        [HttpGet("{uuid}")]
-        public async Task<ActionResult<Compuesto>> GetCompuestoByUuid(Guid uuid)
+        [HttpGet("{compuesto_guid:Guid}")]
+        public async Task<IActionResult> GetByGuidAsync(Guid compuesto_guid)
         {
-            var compuesto = await _compuestoRepository.GetByGuidAsync(uuid);
+            try
+            {
+                var unCompuesto = await _compuestoService
+                    .GetByGuidAsync(compuesto_guid);
 
-            if (compuesto == null || compuesto.Uuid == Guid.Empty)
-                return NotFound($"Compuesto con UUID {uuid} no encontrado.");
-
-            return Ok(compuesto);
+                return Ok(unCompuesto);
+            }
+            catch (AppValidationException error)
+            {
+                return NotFound(error.Message);
+            }
         }
 
-        // POST: api/Compuesto
         [HttpPost]
-        public async Task<ActionResult> CreateCompuesto([FromBody] Compuesto compuesto)
+        public async Task<IActionResult> CreateAsync(Compuesto unCompuesto)
         {
-            if (compuesto == null)
-                return BadRequest("Datos de compuesto inválidos.");
-
-            var creado = await _compuestoRepository.CreateAsync(compuesto);
-
-            if (!creado)
-                return StatusCode(500, "Error al crear el compuesto.");
-
-            return CreatedAtAction(nameof(GetCompuestoByUuid), new { uuid = compuesto.Uuid }, compuesto);
+            try
+            {
+                var compuestoCreado = await _compuestoService
+                    .CreateAsync(unCompuesto);
+                
+                return Ok(compuestoCreado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error en la validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error en la operación de la DB: {error.Message}");
+            }
         }
 
-        // PUT: api/Compuesto/{uuid}
-        [HttpPut("{uuid}")]
-        public async Task<ActionResult> UpdateCompuesto(Guid uuid, [FromBody] Compuesto compuesto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync(Compuesto unCompuesto)
         {
-            if (compuesto == null || compuesto.Uuid != uuid)
-                return BadRequest("Datos de actualización inválidos.");
+            try
+            {
+                var compuestoActualizado = await _compuestoService
+                    .UpdateAsync(unCompuesto);
 
-            var actualizado = await _compuestoRepository.UpdateAsync(compuesto);
-
-            if (!actualizado)
-                return NotFound($"Compuesto con UUID {uuid} no encontrado.");
-
-            return NoContent();
+                return Ok(compuestoActualizado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error de validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error de operación en DB: {error.Message}");
+            }
         }
 
-        // DELETE: api/Compuesto/{uuid}
-        [HttpDelete("{uuid}")]
-        public async Task<ActionResult> DeleteCompuesto(Guid uuid)
+        [HttpDelete]
+        public async Task<IActionResult> RemoveAsync(Guid pais_guid)
         {
-            var eliminado = await _compuestoRepository.RemoveAsync(uuid);
+            try
+            {
+                var paisEliminado = await _compuestoService
+                    .RemoveAsync(pais_guid);
 
-            if (!eliminado)
-                return NotFound($"Compuesto con UUID {uuid} no encontrado.");
-
-            return NoContent();
+                return Ok(paisEliminado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error de validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error de operacion en DB: {error.Message}");
+            }
         }
-    }
 }
-

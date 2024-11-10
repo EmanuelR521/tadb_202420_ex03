@@ -1,7 +1,7 @@
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.DBContexts;
-//using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces;
-//using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories;
-//using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services;
+using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces;
+using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories;
+using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,14 +27,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-//se enmascara el servicio web
-app.Use(async (context, next) =>
-{
-    context.Response.Headers.Append("Server", "MichiServer");
-    await next();
-});
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
