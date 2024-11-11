@@ -68,55 +68,51 @@ create extension if not exists "uuid-ossp";
 
 -- Tabla de Elementos
 create table core.elementos (
-    id                  integer generated always as identity constraint elementos_pk primary key,
+    id_uuid             uuid default gen_random_uuid() primary key,
     nombre              varchar(50) not null,
     simbolo             varchar(5) not null,
     numero_atomico      integer not null,
     config_electronica  varchar(50) not null,
-    elemento_uuid       uuid default gen_random_uuid(),
     constraint nombre_simbolo_uk unique (nombre, simbolo)
 
 );
 
 comment on table core.elementos is 'Tabla que almacena los elementos químicos';
-comment on column core.elementos.id is 'id del elemento';
+comment on column core.elementos.id_uuid is 'uuid del elemento';
 comment on column core.elementos.nombre is 'Nombre completo del elemento';
 comment on column core.elementos.simbolo is 'Símbolo químico del elemento';
 comment on column core.elementos.numero_atomico is 'Número atómico del elemento';
 comment on column core.elementos.config_electronica is 'Configuración electrónica del elemento';
-comment on column core.elementos.elemento_uuid is 'UUID del elemento para uso por API';
 
 
 -- Tabla de Compuestos
 create table core.compuestos (
-    id                  integer generated always as identity constraint compuestos_pk primary key,
+    id_uuid             uuid default gen_random_uuid() primary key,
     nombre              varchar(30) not null,
     formula_quimica     varchar(30) not null,
     masa_molar          numeric(6,3) not null,
     estado_agregacion   varchar(30) not null,
-    compuesto_uuid      uuid default gen_random_uuid(),
     constraint nombre_formula_quimica_uk unique (nombre, formula_quimica)
 );
 
 comment on table core.compuestos is 'Tabla que almacena los compuestos';
-comment on column core.compuestos.id is 'id del compuesto';
+comment on column core.compuestos.id_uuid is 'uuid del compuesto';
 comment on column core.compuestos.nombre is 'Nombre completo del compuesto';
 comment on column core.compuestos.formula_quimica is 'Fórmula química del compuesto';
 comment on column core.compuestos.masa_molar is 'Masa molar del compuesto en gramos/mol';
 comment on column core.compuestos.estado_agregacion is 'Estado de agregación del compuesto (Ej: sólido, líquido, gaseoso)';
-comment on column core.compuestos.compuesto_uuid is 'UUID del elemento para uso por API';
 
 -- Tabla de elementos por compuestos
 create table core.elementos_por_compuestos (
-    elemento_id  integer not null constraint elementos_fk references core.elementos,
-    compuesto_id integer not null constraint compuestos_fk references core.compuestos,
+    elemento_uuid uuid not null constraint elementos_fk references core.elementos(id_uuid),
+    compuesto_uuid uuid not null constraint compuestos_fk references core.compuestos(id_uuid),
     cantidad_atomos integer not null,
-    primary key (elemento_id, compuesto_id)
+    primary key (elemento_uuid, compuesto_uuid)
 );
 
 comment on table core.elementos_por_compuestos is 'Relación de cantidad de átomos de cada elemento en un compuesto';
-comment on column core.elementos_por_compuestos.elemento_id is 'ID del elemento en el compuesto';
-comment on column core.elementos_por_compuestos.compuesto_id is 'ID del compuesto';
+comment on column core.elementos_por_compuestos.elemento_uuid is 'uuid del elemento en el compuesto';
+comment on column core.elementos_por_compuestos.compuesto_uuid is 'uuid del compuesto';
 comment on column core.elementos_por_compuestos.cantidad_atomos is 'Cantidad de átomos del elemento en el compuesto';
 
 
@@ -192,7 +188,7 @@ begin
     -- Validación de existencia del elemento con el UUID
     select count(*) into l_total_registros
     from core.elementos
-    where elemento_uuid = p_elemento_uuid;
+    where id_uuid = p_elemento_uuid;
 
     if l_total_registros = 0 then
         raise exception 'No existe un elemento registrado con ese UUID';
@@ -213,7 +209,7 @@ begin
     select count(*) into l_total_registros
     from core.elementos
     where (lower(nombre) = lower(p_nombre) or lower(simbolo) = lower(p_simbolo))
-    and elemento_uuid != p_elemento_uuid;
+    and id_uuid != p_elemento_uuid;
 
     if l_total_registros > 0 then
         raise exception 'Ya existe un elemento con ese nombre o símbolo';
@@ -225,7 +221,7 @@ begin
         simbolo = upper(p_simbolo),
         numero_atomico = p_numero_atomico,
         config_electronica = p_config_electronica
-    where elemento_uuid = p_elemento_uuid;
+    where id_uuid = p_elemento_uuid;
 
 end; $$;
 
@@ -242,7 +238,7 @@ declare
 begin
     select count(*) into l_total_registros
     from core.elementos
-    where elemento_uuid = p_elemento_uuid;
+    where id_uuid = p_elemento_uuid;
 
     if l_total_registros = 0 then
         raise exception 'No existe un elemento registrado con ese UUID';
@@ -250,11 +246,9 @@ begin
 
     -- Eliminación del elemento
     delete from core.elementos
-    where elemento_uuid = p_elemento_uuid;
+    where id_uuid = p_elemento_uuid;
 
 end; $$;
-
-
 
 -- Procedimiento para Insertar un Nuevo Compuesto
 create or replace procedure core.p_insertar_compuesto(
@@ -294,7 +288,7 @@ declare
 
 begin
     -- Verificación de existencia del compuesto
-    select count(*) into l_total_registros from core.compuestos where compuesto_uuid = p_compuesto_uuid;
+    select count(*) into l_total_registros from core.compuestos where id_uuid = p_compuesto_uuid;
     if l_total_registros = 0 then
         raise exception 'No existe un compuesto registrado con ese UUID';
     end if;
@@ -305,12 +299,13 @@ begin
         formula_quimica = p_formula_quimica,
         masa_molar = p_masa_molar,
         estado_agregacion = initcap(p_estado_agregacion)
-    where compuesto_uuid = p_compuesto_uuid;
+    where id_uuid = p_compuesto_uuid;
 end; $$;
 
 
+---administrarán la relación entre elementos y compuestos para la API
 
--- Procedimiento para Eliminar un Compuesto
+
 create or replace procedure core.p_eliminar_compuesto(
     in p_compuesto_uuid uuid
 )
@@ -320,16 +315,85 @@ declare
     l_total_registros integer;
 
 begin
-    -- Verificación de existencia del compuesto
-    select count(*) into l_total_registros from core.compuestos where compuesto_uuid = p_compuesto_uuid;
+
+    select count(*) into l_total_registros from core.compuestos where id_uuid = p_compuesto_uuid;
     if l_total_registros = 0 then
         raise exception 'No existe un compuesto registrado con ese UUID';
     end if;
 
-    -- Eliminación del compuesto
-    delete from core.compuestos where compuesto_uuid = p_compuesto_uuid;
+
+    delete from core.compuestos where id_uuid = p_compuesto_uuid;
 end; $$;
 
+
+create or replace procedure core.p_insertar_elemento_en_compuesto(
+    in p_elemento_uuid uuid,
+    in p_compuesto_uuid uuid,
+    in p_cantidad_atomos integer
+)
+language plpgsql as $$
+declare
+    l_elemento_existe integer;
+    l_compuesto_existe integer;
+    l_relacion_existe integer;
+begin
+
+    select count(*) into l_elemento_existe
+    from core.elementos
+    where id_uuid = p_elemento_uuid;
+
+    if l_elemento_existe = 0 then
+        raise exception 'El elemento con el UUID especificado no existe';
+    end if;
+
+
+    select count(*) into l_compuesto_existe
+    from core.compuestos
+    where id_uuid = p_compuesto_uuid;
+
+    if l_compuesto_existe = 0 then
+        raise exception 'El compuesto con el UUID especificado no existe';
+    end if;
+
+
+    select count(*) into l_relacion_existe
+    from core.elementos_por_compuestos
+    where elemento_uuid = p_elemento_uuid
+      and compuesto_uuid = p_compuesto_uuid;
+
+    if l_relacion_existe > 0 then
+        raise exception 'Ya existe una relación entre el elemento y el compuesto especificados';
+    end if;
+
+
+    insert into core.elementos_por_compuestos (elemento_uuid, compuesto_uuid, cantidad_atomos)
+    values (p_elemento_uuid, p_compuesto_uuid, p_cantidad_atomos);
+
+end; $$;
+
+create or replace procedure core.p_eliminar_elemento_de_compuesto(
+    in p_elemento_uuid uuid,
+    in p_compuesto_uuid uuid
+)
+language plpgsql as $$
+declare
+    l_relacion_existe integer;
+begin
+
+    select count(*) into l_relacion_existe
+    from core.elementos_por_compuestos
+    where elemento_uuid = p_elemento_uuid
+      and compuesto_uuid = p_compuesto_uuid;
+
+    if l_relacion_existe = 0 then
+        raise exception 'No existe una relación entre el elemento y el compuesto especificados';
+    end if;
+
+    delete from core.elementos_por_compuestos
+    where elemento_uuid = p_elemento_uuid
+      and compuesto_uuid = p_compuesto_uuid;
+
+end; $$;
 
 
 -- ****************************************
@@ -340,20 +404,20 @@ end; $$;
 -- Vista v_info_compuestos
 create or replace view core.v_info_compuestos as
 select
-    c.compuesto_uuid,
+    c.id_uuid as compuesto_uuid,
     c.nombre as compuesto_nombre,
     c.formula_quimica,
     c.masa_molar,
     c.estado_agregacion,
-    e.elemento_uuid,
+    e.id_uuid as elemento_uuid,
     e.nombre as elemento_nombre,
     e.simbolo,
     e.numero_atomico,
     epc.cantidad_atomos
 from
     core.compuestos c
-    join core.elementos_por_compuestos epc on c.id = epc.compuesto_id
-    join core.elementos e on epc.elemento_id = e.id;
+    join core.elementos_por_compuestos epc on c.id_uuid = epc.compuesto_uuid
+    join core.elementos e on epc.elemento_uuid = e.id_uuid;
 
 comment on view core.v_info_compuestos is 'Vista que muestra cada compuesto con sus elementos y cantidades de átomos';
 
@@ -362,7 +426,7 @@ comment on view core.v_info_compuestos is 'Vista que muestra cada compuesto con 
 -- Vista v_info_elementos
 create or replace view core.v_info_elementos as
 select
-    elemento_uuid,
+    id_uuid,
     nombre,
     simbolo,
     numero_atomico,
@@ -378,13 +442,10 @@ comment on view core.v_info_elementos is 'Vista que muestra la información básic
 -- ****************************************
 
 --listar un elemento por guid
-select * from core.elementos where elemento_uuid = '[uuid]';
+select * from core.elementos where id_uuid = '[uuid]';
 
 --listar un compuesto por guid
 select * from core.v_info_compuestos where compuesto_uuid = '[uuid]';
-
-
-
 
 
 -- *******************************************
@@ -417,7 +478,7 @@ call core.p_insertar_compuesto(
 
 -- Actualizar el nombre y configuración electrónica de un elemento usando su UUID
 call core.p_actualizar_elemento(
-    p_elemento_uuid := '8a4e5691-4508-471c-abaa-4061dfbe3a40',
+    p_elemento_uuid := '2ab39ed3-8c9c-44bc-9934-56ec869eb73c',
     p_nombre := 'Hidrógeno Modificado',
     p_simbolo := 'H',
     p_numero_atomico := 1,
@@ -425,29 +486,16 @@ call core.p_actualizar_elemento(
 
 -- Actualizar la fórmula química y masa molar de un compuesto usando su UUID
 call core.p_actualizar_compuesto(
-    p_compuesto_uuid := '91463ce4-913c-46ee-ad63-fe823ba61573',
+    p_compuesto_uuid := 'f90d717d-5f25-4553-aae9-c0925d238b0f',
     p_nombre := 'Agua Modificada',
     p_formula_quimica := 'H2O2',
     p_masa_molar := 36.030,
     p_estado_agregacion := 'Líquido');
+
 
 -- Eliminar un elemento (Hidrógeno) por su UUID
 call core.p_eliminar_elemento(p_elemento_uuid := '8a4e5691-4508-471c-abaa-4061dfbe3a40');
 
 -- Eliminar un compuesto (Agua) por su UUID
 call core.p_eliminar_compuesto(p_compuesto_uuid := '91463ce4-913c-46ee-ad63-fe823ba61573');
-
--- Ver todos los elementos
-select * from core.v_info_elementos;
-
--- insertamos manualmente la cantidad de atomos "validar que si corresponda el id agua e hidrogeno" 
-INSERT INTO core.elementos_por_compuestos (elemento_id, compuesto_id, cantidad_atomos)
-VALUES (1, 1, 2);
-
---ver la atabla elementos por compuesto
-select * from core.elementos_por_compuestos;
-
---Ver todos los compuestos con sus elementos
-select * from core.v_info_compuestos;
-
 

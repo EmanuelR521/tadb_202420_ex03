@@ -16,7 +16,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
         {
             var conexion = contextoDB.CreateConnection();
 
-            string sentenciaSQL = "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos ORDER BY nombre";
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos ORDER BY nombre";
 
             var resultadoElementos = await conexion
                 .QueryAsync<Elemento>(sentenciaSQL, new DynamicParameters());
@@ -34,7 +34,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@uuid", elemento_guid,
                                     DbType.Guid, ParameterDirection.Input);
 
-            string sentenciaSQL = "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos WHERE elemento_uuid = @uuid";
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos WHERE id_uuid = @uuid";
 
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
