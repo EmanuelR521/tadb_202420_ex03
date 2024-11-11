@@ -16,7 +16,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
         public async Task<List<Compuesto>> GetAllAsync()
         {
-            var conexion = contextoDB.CreateConnection();
+            using var conexion = contextoDB.CreateConnection();
             string sentenciaSQL = "SELECT compuesto_uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos";
 
             var resultadoCompuestos = await conexion.QueryAsync<Compuesto>(sentenciaSQL);
@@ -26,20 +26,20 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
         public async Task<Compuesto> GetByGuidAsync(Guid compuestoGuid)
         {
-            var conexion = contextoDB.CreateConnection();
+            using var conexion = contextoDB.CreateConnection();
             string sentenciaSQL = "SELECT compuesto_uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE compuesto_uuid = @compuestoGuid";
 
             var parametros = new DynamicParameters();
             parametros.Add("@compuestoGuid", compuestoGuid, DbType.Guid, ParameterDirection.Input);
 
             var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametros);
-            return resultado.FirstOrDefault() ?? new Compuesto();
+            return resultado.FirstOrDefault() ?? throw new DbOperationException($"Compuesto con GUID {compuestoGuid} no encontrado.");
         }
 
 
         public async Task<string> GetCompuestoByNameAsync(string compuestoNombre)
         {
-            var conexion = contextoDB.CreateConnection();
+            using var conexion = contextoDB.CreateConnection();
             string sentenciaSQL = "SELECT nombre FROM core.compuestos WHERE LOWER(nombre) = LOWER(@compuestoNombre)";
 
             var parametros = new DynamicParameters();
@@ -49,10 +49,11 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             return resultado.FirstOrDefault() ?? string.Empty;
         }
 
-        
+
         public async Task<bool> CreateAsync(Compuesto compuesto)
         {
             bool resultadoAccion = false;
+
             try
             {
                 var conexion = contextoDB.CreateConnection();
@@ -68,12 +69,13 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
                 var cantidadFilas = await conexion
                     .ExecuteAsync(
-                    procedimiento, 
-                    parametros, 
-                    commandType: CommandType.StoredProcedure);
+                        procedimiento, 
+                        parametros, 
+                        commandType: CommandType.StoredProcedure);
 
                 if (cantidadFilas != 0)
                     resultadoAccion = true;
+
             }
             catch (NpgsqlException ex)
             {
@@ -82,9 +84,11 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             return resultadoAccion;
         }
 
-        
+
         public async Task<bool> UpdateAsync(Compuesto compuesto)
         {
+            bool resultadoAccion = false;
+
             var compuestoExistente = await GetByGuidAsync(compuesto.Uuid);
 
             if (compuestoExistente == null || compuestoExistente.Uuid == Guid.Empty)
@@ -97,39 +101,58 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
                 var parametros = new
                 {
-                    p_uuid = compuesto.Uuid,
+                    p_compuesto_uuid = compuesto.Uuid,
                     p_nombre = compuesto.Nombre,
                     p_formula_quimica = compuesto.Formula_Quimica,
                     p_masa_molar = compuesto.Masa_Molar,
                     p_estado_agregacion = compuesto.Estado_Agregacion
                 };
 
-                var cantidadFilas = await conexion.ExecuteAsync(procedimiento, parametros, commandType: CommandType.StoredProcedure);
-                return cantidadFilas > 0;
+                var cantidad_filas = await conexion.ExecuteAsync(procedimiento, parametros, commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+
             }
             catch (NpgsqlException ex)
             {
                 throw new DbOperationException($"Error al actualizar el compuesto: {ex.Message}");
             }
+            return resultadoAccion;
         }
 
-        
+
         public async Task<bool> RemoveAsync(Guid compuestoGuid)
         {
+            bool resultadoAccion = false;
             try
             {
-                var conexion = contextoDB.CreateConnection();
+                using var conexion = contextoDB.CreateConnection();
                 string procedimiento = "core.p_eliminar_compuesto";
 
-                var parametros = new { p_uuid = compuestoGuid };
-                var cantidadFilas = await conexion.ExecuteAsync(procedimiento, parametros, commandType: CommandType.StoredProcedure);
+                var parametros = new { p_compuesto_uuid = compuestoGuid };
 
-                return cantidadFilas > 0;
+
+                var cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento, 
+                    parametros, 
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+
+                if (cantidad_filas == 0)
+                {
+                    throw new AppValidationException("No se encontró ningún compuesto para eliminar con el GUID proporcionado.");
+                }
+
             }
             catch (NpgsqlException ex)
             {
                 throw new DbOperationException($"Error al eliminar el compuesto: {ex.Message}");
             }
+
+            return resultadoAccion;
         }
     }
 }
