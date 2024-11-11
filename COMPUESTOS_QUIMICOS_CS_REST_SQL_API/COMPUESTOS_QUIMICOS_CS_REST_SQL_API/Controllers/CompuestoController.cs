@@ -33,14 +33,16 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-        
+
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] Compuesto unCompuesto)
+        public async Task<IActionResult> CreateAsync(Compuesto unCompuesto)
         {
             try
             {
-                var compuestoCreado = await _compuestoService.CreateAsync(unCompuesto);
-                return CreatedAtAction(nameof(GetByGuidAsync), new { compuesto_guid = compuestoCreado.Uuid }, compuestoCreado);
+                var compuestoCreado = await _compuestoService
+                    .CreateAsync(unCompuesto);
+
+                return Ok(compuestoCreado);
             }
             catch (AppValidationException error)
             {
@@ -52,7 +54,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-        
+
         [HttpPut("{compuesto_guid:Guid}")]
         public async Task<IActionResult> UpdateAsync(Guid compuesto_guid, [FromBody] Compuesto unCompuesto)
         {
