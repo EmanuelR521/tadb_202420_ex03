@@ -11,24 +11,20 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
     {
         private readonly CompuestoService _compuestoService = compuestoService;
 
-
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {
-            var losCompuestos = await _compuestoService
-                .GetAllAsync();
-
+            var losCompuestos = await _compuestoService.GetAllAsync();
             return Ok(losCompuestos);
         }
 
+        
         [HttpGet("{compuesto_guid:Guid}")]
         public async Task<IActionResult> GetByGuidAsync(Guid compuesto_guid)
         {
             try
             {
-                var unCompuesto = await _compuestoService
-                    .GetByGuidAsync(compuesto_guid);
-
+                var unCompuesto = await _compuestoService.GetByGuidAsync(compuesto_guid);
                 return Ok(unCompuesto);
             }
             catch (AppValidationException error)
@@ -37,15 +33,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
+        
         [HttpPost]
-        public async Task<IActionResult> CreateAsync(Compuesto unCompuesto)
+        public async Task<IActionResult> CreateAsync([FromBody] Compuesto unCompuesto)
         {
             try
             {
-                var compuestoCreado = await _compuestoService
-                    .CreateAsync(unCompuesto);
-
-                return Ok(compuestoCreado);
+                var compuestoCreado = await _compuestoService.CreateAsync(unCompuesto);
+                return CreatedAtAction(nameof(GetByGuidAsync), new { compuesto_guid = compuestoCreado.Uuid }, compuestoCreado);
             }
             catch (AppValidationException error)
             {
@@ -57,14 +52,16 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateAsync(Compuesto unCompuesto)
+        
+        [HttpPut("{compuesto_guid:Guid}")]
+        public async Task<IActionResult> UpdateAsync(Guid compuesto_guid, [FromBody] Compuesto unCompuesto)
         {
+            if (unCompuesto.Uuid != compuesto_guid)
+                return BadRequest("El GUID del compuesto no coincide con el de la solicitud.");
+
             try
             {
-                var compuestoActualizado = await _compuestoService
-                    .UpdateAsync(unCompuesto);
-
+                var compuestoActualizado = await _compuestoService.UpdateAsync(unCompuesto);
                 return Ok(compuestoActualizado);
             }
             catch (AppValidationException error)
@@ -77,15 +74,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> RemoveAsync(Guid pais_guid)
+        
+        [HttpDelete("{compuesto_guid:Guid}")]
+        public async Task<IActionResult> RemoveAsync(Guid compuesto_guid)
         {
             try
             {
-                var paisEliminado = await _compuestoService
-                    .RemoveAsync(pais_guid);
-
-                return Ok(paisEliminado);
+                var compuestoEliminado = await _compuestoService.RemoveAsync(compuesto_guid);
+                return Ok(compuestoEliminado);
             }
             catch (AppValidationException error)
             {
@@ -93,7 +89,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
             catch (DbOperationException error)
             {
-                return BadRequest($"Error de operacion en DB: {error.Message}");
+                return BadRequest($"Error de operación en DB: {error.Message}");
             }
         }
     }

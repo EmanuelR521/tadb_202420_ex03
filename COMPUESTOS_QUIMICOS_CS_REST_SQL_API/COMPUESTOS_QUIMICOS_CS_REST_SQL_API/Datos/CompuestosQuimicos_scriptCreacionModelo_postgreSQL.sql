@@ -52,6 +52,11 @@ alter default privileges for user quimico_app in schema core grant insert, updat
 alter default privileges for user quimico_app in schema core grant execute on routines to quimico_usr;
 alter user quimico_usr set search_path to core;
 
+-- privilegios adicionales para poder que la api funcione
+grant select, insert, update, delete on table core.compuestos TO quimico_usr;
+grant select, insert, update, delete on table core.elementos TO quimico_usr;
+grant select, insert, update, delete on table core.elementos_por_compuestos TO quimico_usr;
+
 -- Activar la extensión que permite el uso de UUID
 create extension if not exists "uuid-ossp";
 
@@ -255,7 +260,7 @@ end; $$;
 create or replace procedure core.p_insertar_compuesto(
     in p_nombre text,
     in p_formula_quimica text,
-    in p_masa_molar numeric,
+    in p_masa_molar real,
     in p_estado_agregacion text
 )
 language plpgsql as $$
@@ -279,7 +284,7 @@ create or replace procedure core.p_actualizar_compuesto(
     in p_compuesto_uuid uuid,
     in p_nombre text,
     in p_formula_quimica text,
-    in p_masa_molar numeric,
+    in p_masa_molar real,
     in p_estado_agregacion text
 )
 language plpgsql as $$

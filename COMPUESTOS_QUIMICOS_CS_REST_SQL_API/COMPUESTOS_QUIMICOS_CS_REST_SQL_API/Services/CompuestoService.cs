@@ -8,11 +8,13 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
     {
         private readonly ICompuestoRepository _compuestoRepository = compuestoRepository;
 
+        
         public async Task<List<Compuesto>> GetAllAsync()
         {
             return await _compuestoRepository.GetAllAsync();
         }
 
+        
         public async Task<Compuesto> GetByGuidAsync(Guid compuestoGuid)
         {
             var unCompuesto = await _compuestoRepository.GetByGuidAsync(compuestoGuid);
@@ -23,6 +25,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             return unCompuesto;
         }
 
+        
         public async Task<Compuesto> CreateAsync(Compuesto unCompuesto)
         {
             string resultadoValidacionDatos = ValidaDatos(unCompuesto);
@@ -51,6 +54,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             return unCompuesto;
         }
 
+        
         public async Task<Compuesto> UpdateAsync(Compuesto unCompuesto)
         {
             string resultadoValidacionDatos = ValidaDatos(unCompuesto);
@@ -80,6 +84,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             return compuestoExistente;
         }
 
+        
         public async Task<Compuesto> RemoveAsync(Guid compuestoGuid)
         {
             var compuestoExistente = await _compuestoRepository.GetByGuidAsync(compuestoGuid);
@@ -102,19 +107,20 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             return compuestoExistente;
         }
 
+        
         private static string ValidaDatos(Compuesto unCompuesto)
         {
             if (string.IsNullOrEmpty(unCompuesto.Nombre))
                 return "El nombre del compuesto no puede estar vacío.";
 
             if (string.IsNullOrEmpty(unCompuesto.Formula_Quimica))
-                return "El símbolo del compuesto no puede estar vacío.";
+                return "La fórmula química del compuesto no puede estar vacía.";
 
             if (unCompuesto.Masa_Molar <= 0)
-                return "El número atómico del compuesto no puede ser menor o igual a cero.";
+                return "La masa molar del compuesto no puede ser menor o igual a cero.";
 
             if (string.IsNullOrEmpty(unCompuesto.Estado_Agregacion))
-                return "La configuración electrónica del compuesto no puede estar vacía.";
+                return "El estado de agregación del compuesto no puede estar vacío.";
 
             return string.Empty;
         }
