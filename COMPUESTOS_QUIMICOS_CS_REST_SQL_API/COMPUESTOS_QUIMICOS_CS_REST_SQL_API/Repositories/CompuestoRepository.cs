@@ -12,44 +12,57 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
     {
         private readonly PgsqlDbContext contextoDB = contexto;
 
-
-
         public async Task<List<Compuesto>> GetAllAsync()
         {
             using var conexion = contextoDB.CreateConnection();
-            string sentenciaSQL = "SELECT compuesto_uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos";
 
-            var resultadoCompuestos = await conexion.QueryAsync<Compuesto>(sentenciaSQL);
+            string sentenciaSQL = "SELECT compuesto_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos ORDER BY nombre";
+
+            var resultadoCompuestos = await conexion.QueryAsync<Compuesto>(sentenciaSQL, new DynamicParameters());
             return resultadoCompuestos.ToList();
         }
 
 
         public async Task<Compuesto> GetByGuidAsync(Guid compuestoGuid)
         {
+            Compuesto unCompuesto = new();
+
             using var conexion = contextoDB.CreateConnection();
-            string sentenciaSQL = "SELECT compuesto_uuid AS Uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE compuesto_uuid = @compuestoGuid";
 
-            var parametros = new DynamicParameters();
-            parametros.Add("@compuestoGuid", compuestoGuid, DbType.Guid, ParameterDirection.Input);
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@uuid", compuestoGuid,
+                                    DbType.Guid, ParameterDirection.Input);
 
-            var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametros);
-            return resultado.FirstOrDefault() ?? throw new DbOperationException($"Compuesto con GUID {compuestoGuid} no encontrado.");
+            string sentenciaSQL = "SELECT compuesto_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE compuesto_uuid = @uuid";
+
+            var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
+
+            if(resultado.Any())
+                unCompuesto = resultado.First();
+
+            return unCompuesto;
         }
 
 
         public async Task<string> GetCompuestoByNameAsync(string compuestoNombre)
         {
-            using var conexion = contextoDB.CreateConnection();
-            string sentenciaSQL = "SELECT nombre FROM core.compuestos WHERE LOWER(nombre) = LOWER(@compuestoNombre)";
+            string nombreCompuesto = string.Empty;
+           
+            var conexion = contextoDB.CreateConnection();
 
-            var parametros = new DynamicParameters();
-            parametros.Add("@compuestoNombre", compuestoNombre, DbType.String, ParameterDirection.Input);
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@compuestoNombre", compuestoNombre,
+                                    DbType.String, ParameterDirection.Input);
 
-            var resultado = await conexion.QueryAsync<string>(sentenciaSQL, parametros);
-            return resultado.FirstOrDefault() ?? string.Empty;
+            string sentenciaSQL = "SELECT distinct compuesto_nombre FROM core.v_info_compuestos WHERE LOWER(compuesto_nombre) = LOWER(@compuestoNombre)";
+
+            var resultado = await conexion.QueryAsync<string>(sentenciaSQL, parametrosSentencia);
+
+            if(resultado.Any())
+                nombreCompuesto = resultado.First();
+
+            return nombreCompuesto;
         }
-
-
         public async Task<bool> CreateAsync(Compuesto compuesto)
         {
             bool resultadoAccion = false;
@@ -83,8 +96,6 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             }
             return resultadoAccion;
         }
-
-
         public async Task<bool> UpdateAsync(Compuesto compuesto)
         {
             bool resultadoAccion = false;

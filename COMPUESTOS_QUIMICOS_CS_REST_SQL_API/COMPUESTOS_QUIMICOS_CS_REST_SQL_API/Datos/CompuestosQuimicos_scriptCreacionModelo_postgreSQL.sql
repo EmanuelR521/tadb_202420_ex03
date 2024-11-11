@@ -56,6 +56,7 @@ alter user quimico_usr set search_path to core;
 grant select, insert, update, delete on table core.compuestos TO quimico_usr;
 grant select, insert, update, delete on table core.elementos TO quimico_usr;
 grant select, insert, update, delete on table core.elementos_por_compuestos TO quimico_usr;
+grant select on core.v_info_compuestos to quimico_usr;
 
 -- Activar la extensión que permite el uso de UUID
 create extension if not exists "uuid-ossp";
