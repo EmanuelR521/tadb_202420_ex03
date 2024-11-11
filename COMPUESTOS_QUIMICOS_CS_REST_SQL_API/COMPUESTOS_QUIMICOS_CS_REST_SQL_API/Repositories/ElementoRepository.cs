@@ -1,4 +1,5 @@
 ﻿using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.DBContexts;
+using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Exceptions;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models;
 using Dapper;
@@ -16,7 +17,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             var conexion = contextoDB.CreateConnection();
 
             string sentenciaSQL =
-                "SELECT elemento_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion" +
+                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica" +
                 "FROM core.elementos ORDER BY nombre";
 
             var resultadoElementos = await conexion
@@ -25,130 +26,158 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             return resultadoElementos.ToList();
         }
 
-        //public async Task<Pais> GetByGuidAsync(Guid pais_guid)
-        //{
-        //    Pais unPais = new();
+        public async Task<Elemento> GetByGuidAsync(Guid elemento_guid)
+        {
+            Elemento unElemento = new();
 
-        //    var conexion = contextoDB.CreateConnection();
+            var conexion = contextoDB.CreateConnection();
 
-        //    DynamicParameters parametrosSentencia = new();
-        //    parametrosSentencia.Add("@pais_guid", pais_guid,
-        //                            DbType.Guid, ParameterDirection.Input);
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@elemento_guid", elemento_guid,
+                                    DbType.Guid, ParameterDirection.Input);
 
-        //    string sentenciaSQL =
-        //        "SELECT pais_uuid uuid, nombre, continente " +
-        //        "FROM core.paises " +
-        //        "WHERE pais_uuid = @pais_guid ";
+            string sentenciaSQL =
+                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica" +
+                "FROM core.elementos " +
+                "WHERE elemento_uuid = @elemento_guid ";
 
 
-        //    var resultado = await conexion.QueryAsync<Pais>(sentenciaSQL,
-        //        parametrosSentencia);
+            var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
+                parametrosSentencia);
 
-        //    if (resultado.Any())
-        //        unPais = resultado.First();
+            if (resultado.Any())
+                unElemento = resultado.First();
 
-        //    return unPais;
-        //}
+            return unElemento;
+        }
 
-        //public async Task<bool> CreateAsync(Pais unPais)
-        //{
-        //    bool resultadoAccion = false;
+        public async Task<string> GetElementoByNameAsync(string elemento_nombre)
+        {
+            string nombreElemento = string.Empty;
 
-        //    try
-        //    {
-        //        var conexion = contextoDB.CreateConnection();
+            var conexion = contextoDB.CreateConnection();
 
-        //        string procedimiento = "core.p_insertar_pais";
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@elemento_nombre", elemento_nombre,
+                                    DbType.String, ParameterDirection.Input);
 
-        //        var parametros = new
-        //        {
-        //            p_nombre = unPais.Nombre,
-        //            p_continente = unPais.Continente
-        //        };
+            string sentenciaSQL =
+                "SELECT distinct elementos FROM core.v_info_elementos WHERE LOWER(elemento) = LOWER(@elemento_nombre)";
 
-        //        var cantidadFilas = await conexion
-        //            .ExecuteAsync(
-        //                procedimiento,
-        //                parametros,
-        //                commandType: CommandType.StoredProcedure);
+            var resultado = await conexion.QueryAsync<string>(sentenciaSQL,
+                parametrosSentencia);
 
-        //        if (cantidadFilas != 0)
-        //            resultadoAccion = true;
-        //    }
-        //    catch (NpgsqlException error)
-        //    {
-        //        throw new DbOperationException(error.Message);
-        //    }
+            if (resultado.Any())
+                nombreElemento = resultado.First();
 
-        //    return resultadoAccion;
-        //}
+            return nombreElemento;
+        }
 
-        //public async Task<bool> UpdateAsync(Pais unPais)
-        //{
-        //    bool resultadoAccion = false;
 
-        //    var paisExistente = await GetByGuidAsync(unPais.Uuid);
+        public async Task<bool> CreateAsync(Elemento unElemento)
+        {
+            bool resultadoAccion = false;
 
-        //    if (paisExistente.Uuid == Guid.Empty)
-        //        throw new DbOperationException($"No se puede actualizar. No existe la fruta {unPais.Nombre!}.");
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
 
-        //    try
-        //    {
-        //        var conexion = contextoDB.CreateConnection();
+                string procedimiento = "core.p_insertar_elemento";
 
-        //        string procedimiento = "core.p_actualizar_pais";
-        //        var parametros = new
-        //        {
-        //            p_uuid = unPais.Uuid,
-        //            p_nombre = unPais.Nombre,
-        //            p_continente = unPais.Continente
-        //        };
+                var parametros = new
+                {
+                    p_nombre = unElemento.Nombre,
+                    p_simbolo = unElemento.Simbolo,
+                    p_numero_atomico = unElemento.Numero_Atomico,
+                    p_config_electronica = unElemento.Config_Electronica,
 
-        //        var cantidad_filas = await conexion.ExecuteAsync(
-        //            procedimiento,
-        //            parametros,
-        //            commandType: CommandType.StoredProcedure);
+                };
 
-        //        if (cantidad_filas != 0)
-        //            resultadoAccion = true;
-        //    }
-        //    catch (NpgsqlException error)
-        //    {
-        //        throw new DbOperationException(error.Message);
-        //    }
+                var cantidadFilas = await conexion
+                    .ExecuteAsync(
+                        procedimiento,
+                        parametros,
+                        commandType: CommandType.StoredProcedure);
 
-        //    return resultadoAccion;
-        //}
+                if (cantidadFilas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
 
-        //public async Task<bool> RemoveAsync(Guid pais_guid)
-        //{
-        //    bool resultadoAccion = false;
+            return resultadoAccion;
+        }
 
-        //    try
-        //    {
+        public async Task<bool> UpdateAsync(Elemento unElemento)
+        {
+            bool resultadoAccion = false;
 
-        //        var conexion = contextoDB.CreateConnection();
+            var elementoExistente = await GetByGuidAsync(unElemento.Uuid);
 
-        //        string procedimiento = "core.p_eliminar_pais";
-        //        var parametros = new
-        //        {
-        //            p_uuid = pais_guid
-        //        };
+            if (elementoExistente.Uuid == Guid.Empty)
+                throw new DbOperationException($"No se puede actualizar. No existe el elemento {unElemento.Nombre!}.");
 
-        //        var cantidad_filas = await conexion.ExecuteAsync(
-        //            procedimiento,
-        //            parametros,
-        //            commandType: CommandType.StoredProcedure);
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
 
-        //        if (cantidad_filas != 0)
-        //            resultadoAccion = true;
-        //    }
-        //    catch (NpgsqlException error)
-        //    {
-        //        throw new DbOperationException(error.Message);
-        //    }
+                string procedimiento = "core.p_actualizar_elemento";
+                var parametros = new
+                {
+                    p_uuid = unElemento.Uuid,
+                    p_nombre = unElemento.Nombre,
+                    p_simbolo = unElemento.Simbolo,
+                    p_numero_atomico = unElemento.Numero_Atomico,
+                    p_config_electronica = unElemento.Config_Electronica,
+                };
 
-        //    return resultadoAccion;
-        //}
+                var cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
+        }
+
+        public async Task<bool> RemoveAsync(Guid elemento_guid)
+        {
+            bool resultadoAccion = false;
+
+            try
+            {
+
+                var conexion = contextoDB.CreateConnection();
+
+                string procedimiento = "core.p_eliminar_elemento";
+                var parametros = new
+                {
+                    p_uuid = elemento_guid
+                };
+
+                var cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
+        }
     }
 }

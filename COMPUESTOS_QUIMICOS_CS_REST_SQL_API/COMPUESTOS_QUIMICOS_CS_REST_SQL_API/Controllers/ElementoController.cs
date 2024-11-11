@@ -7,25 +7,28 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CompuestoController(ElementoService compuestoService) : Controller
+    public class ElementoController(ElementoService elementoService) : Controller
     {
-        private readonly ElementoService _compuestoService = compuestoService;
+        private readonly ElementoService _elementoService = elementoService;
+
 
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {
-            var losCompuestos = await _compuestoService.GetAllAsync();
-            return Ok(losCompuestos);
+            var losElementos = await _elementoService.GetAllAsync();
+
+            return Ok(losElementos);
         }
 
-        
         [HttpGet("{compuesto_guid:Guid}")]
-        public async Task<IActionResult> GetByGuidAsync(Guid compuesto_guid)
+        public async Task<IActionResult> GetByGuidAsync(Guid elemento_guid)
         {
             try
             {
-                var unCompuesto = await _compuestoService.GetByGuidAsync(compuesto_guid);
-                return Ok(unCompuesto);
+                var unElemento = await _elementoService
+                    .GetByGuidAsync(elemento_guid);
+
+                return Ok(unElemento);
             }
             catch (AppValidationException error)
             {
@@ -33,16 +36,15 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-
         [HttpPost]
-        public async Task<IActionResult> CreateAsync(Compuesto unCompuesto)
+        public async Task<IActionResult> CreateAsync(Elemento unElemento)
         {
             try
             {
-                var compuestoCreado = await _compuestoService
-                    .CreateAsync(unCompuesto);
+                var elementoCreado = await _elementoService
+                    .CreateAsync(unElemento);
 
-                return Ok(compuestoCreado);
+                return Ok(elementoCreado);
             }
             catch (AppValidationException error)
             {
@@ -54,17 +56,15 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-
-        [HttpPut("{compuesto_guid:Guid}")]
-        public async Task<IActionResult> UpdateAsync(Guid compuesto_guid, [FromBody] Compuesto unCompuesto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync(Elemento unElemento)
         {
-            if (unCompuesto.Uuid != compuesto_guid)
-                return BadRequest("El GUID del compuesto no coincide con el de la solicitud.");
-
             try
             {
-                var compuestoActualizado = await _compuestoService.UpdateAsync(unCompuesto);
-                return Ok(compuestoActualizado);
+                var elementoActualizado = await _elementoService
+                    .UpdateAsync(unElemento);
+
+                return Ok(elementoActualizado);
             }
             catch (AppValidationException error)
             {
@@ -76,14 +76,15 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
         }
 
-        
-        [HttpDelete("{compuesto_guid:Guid}")]
-        public async Task<IActionResult> RemoveAsync(Guid compuesto_guid)
+        [HttpDelete]
+        public async Task<IActionResult> RemoveAsync(Guid elemento_guid)
         {
             try
             {
-                var compuestoEliminado = await _compuestoService.RemoveAsync(compuesto_guid);
-                return Ok(compuestoEliminado);
+                var elementoEliminado = await _elementoService
+                    .RemoveAsync(elemento_guid);
+
+                return Ok(elementoEliminado);
             }
             catch (AppValidationException error)
             {
@@ -91,7 +92,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
             }
             catch (DbOperationException error)
             {
-                return BadRequest($"Error de operación en DB: {error.Message}");
+                return BadRequest($"Error de operacion en DB: {error.Message}");
             }
         }
     }
