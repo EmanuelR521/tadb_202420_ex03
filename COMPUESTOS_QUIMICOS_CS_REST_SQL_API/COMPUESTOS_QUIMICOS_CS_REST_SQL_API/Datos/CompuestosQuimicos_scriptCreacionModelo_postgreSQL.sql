@@ -24,10 +24,10 @@ docker run --name postgres-CompuestosQuimicos -e POSTGRES_PASSWORD=unaClav3 -d -
 
 -- Con usuario postgres:
 -- Crear la base de datos
-create database compuestosQuimicos_db;
+create database compuestosquimicos_db;
 
 -- Conectarse a la base de datos
-\c compuestosQuimicos_db;
+\c compuestosquimicos_db;
 
 -- Creamos un esquema para almacenar todo el modelo de datos del dominio
 -- esquema principal
@@ -57,6 +57,7 @@ grant select, insert, update, delete on table core.compuestos TO quimico_usr;
 grant select, insert, update, delete on table core.elementos TO quimico_usr;
 grant select, insert, update, delete on table core.elementos_por_compuestos TO quimico_usr;
 grant select on core.v_info_compuestos to quimico_usr;
+grant select on core.v_info_elementos to quimico_usr;
 
 -- Activar la extensión que permite el uso de UUID
 create extension if not exists "uuid-ossp";
@@ -122,10 +123,6 @@ comment on column core.elementos_por_compuestos.cantidad_atomos is 'Cantidad de 
 -- *****************************
 -- Nota: insertar datos de CSV
 -- *****************************
-
-
-
-
 
 
 ----------------------------Pasos Siguientes---------------------------------

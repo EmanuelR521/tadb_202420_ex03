@@ -17,7 +17,7 @@ builder.Services.AddScoped<ICompuestoRepository, CompuestoRepository>();
 
 //servicios asociados para cada ruta
 builder.Services.AddScoped<ElementoService>();
-builder.Services.AddScoped<ElementoService>();
+builder.Services.AddScoped<CompuestoService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

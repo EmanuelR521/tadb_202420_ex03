@@ -20,7 +20,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             var unElemento = await _elementoRepository.GetByGuidAsync(elemento_guid);
 
             if (unElemento.Uuid == Guid.Empty)
-                throw new AppValidationException($"Compuesto no encontrado con el GUID {elemento_guid}");
+                throw new AppValidationException($"Elemento no encontrado con el GUID {elemento_guid}");
 
             return unElemento;
         }
@@ -34,8 +34,10 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 
             var elementoExistente = await _elementoRepository.GetElementoByNameAsync(unElemento.Nombre!);
 
-            if (string.IsNullOrEmpty(elementoExistente))
+            if (!string.IsNullOrEmpty(elementoExistente))
                 throw new AppValidationException($"Ya existe un elemento registrado con el nombre {unElemento.Nombre}");
+
+
 
             try
             {
@@ -113,13 +115,11 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             if (string.IsNullOrEmpty(unElemento.Simbolo))
                 return ("El simbolo del elemento no puede estar vacio");
             
-            if (string.IsNullOrEmpty(unElemento.Numero_Atomico.ToString()))
-                return ("El numero atomico no puede estar vacio");
+            if (unElemento.Numero_Atomico <= 0)
+                return "el numero atomico no puede ser menor o igual a cero.";
 
             if (string.IsNullOrEmpty(unElemento.Config_Electronica))
                 return ("La configuracion electronica no puede estar vacia");
-
-
 
             return string.Empty;
         }

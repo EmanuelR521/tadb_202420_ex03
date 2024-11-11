@@ -152,10 +152,6 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 if (cantidad_filas != 0)
                     resultadoAccion = true;
 
-                if (cantidad_filas == 0)
-                {
-                    throw new AppValidationException("No se encontró ningún compuesto para eliminar con el GUID proporcionado.");
-                }
 
             }
             catch (NpgsqlException ex)
