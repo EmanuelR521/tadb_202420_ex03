@@ -4,7 +4,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models
 {
     public class Elemento
     {
-        [JsonPropertyName("uuid")]
+        [JsonPropertyName("id_uuid")]
         public Guid Uuid { get; set; } = Guid.Empty;
 
         [JsonPropertyName("nombre")]

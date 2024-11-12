@@ -9,6 +9,6 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces
         public Task<bool> CreateAsync(Elemento unElemento);
         public Task<bool> UpdateAsync(Elemento unElemento);
         public Task<bool> RemoveAsync(Guid elemento_guid);
-        public Task<string> GetElementoByNameAsync(string elemento_nombre);
+        public Task<Elemento> GetElementoByNameAsync(string elemento_nombre);
     }
 }

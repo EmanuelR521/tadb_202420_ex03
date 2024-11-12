@@ -45,9 +45,10 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             return unElemento;
         }
 
-        public async Task<string> GetElementoByNameAsync(string elemento_nombre)
+        public async Task<Elemento> GetElementoByNameAsync(string elemento_nombre)
         {
-            string nombreElemento = string.Empty;
+
+            Elemento elementoExistente = new();
 
             var conexion = contextoDB.CreateConnection();
 
@@ -55,15 +56,15 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@elementoNombre", elemento_nombre,
                                     DbType.String, ParameterDirection.Input);
 
-            string sentenciaSQL ="SELECT distinct nombre FROM core.v_info_elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
+            string sentenciaSQL ="SELECT * FROM core.elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
 
-            var resultado = await conexion.QueryAsync<string>(sentenciaSQL,
+            var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
 
             if (resultado.Any())
-                nombreElemento = resultado.First();
-
-            return nombreElemento;
+                elementoExistente = resultado.First();
+           
+            return elementoExistente;
         }
 
 

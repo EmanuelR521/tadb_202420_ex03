@@ -1,8 +1,6 @@
 ﻿using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Exceptions;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Interfaces;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models;
-using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories;
-using System.Runtime.CompilerServices;
 
 namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 {
@@ -27,6 +25,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 
         public async Task<Elemento> CreateAsync(Elemento unElemento)
         {
+            Elemento elementoCreado = new();
             string resultadoValidacionDatos = ValidaDatos(unElemento);
 
             if (!string.IsNullOrEmpty(resultadoValidacionDatos))
@@ -34,7 +33,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 
             var elementoExistente = await _elementoRepository.GetElementoByNameAsync(unElemento.Nombre!);
 
-            if (!string.IsNullOrEmpty(elementoExistente))
+            if (!string.IsNullOrEmpty(elementoExistente.Nombre))
                 throw new AppValidationException($"Ya existe un elemento registrado con el nombre {unElemento.Nombre}");
 
 
@@ -46,13 +45,16 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
                 if (!resultado)
                     throw new AppValidationException("Operación ejecutada, pero no generó cambios");
 
+                elementoCreado = await _elementoRepository.GetElementoByNameAsync(unElemento.Nombre!);
+                Console.WriteLine(elementoCreado.Uuid);
+
             }
             catch (DbOperationException ex)
             {
                 throw new AppValidationException("Error en la base de datos: " + ex.Message);
             }
 
-            return unElemento;
+            return elementoCreado;
         }
 
         public async Task<Elemento> UpdateAsync(Elemento unElemento)
@@ -62,9 +64,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
             if (!string.IsNullOrEmpty(resultadoValidacionDatos))
                 throw new AppValidationException(resultadoValidacionDatos);
 
-            var elementoExistente = await _elementoRepository.GetByGuidAsync (unElemento.Uuid);
+            var elementoExistente = await _elementoRepository.GetByGuidAsync(unElemento.Uuid);
 
-            if(elementoExistente.Uuid == Guid.Empty )
+            if (elementoExistente.Uuid == Guid.Empty)
                 throw new AppValidationException($"Elemento no encontrado con el GUID {unElemento.Uuid}");
 
             try
@@ -114,7 +116,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 
             if (string.IsNullOrEmpty(unElemento.Simbolo))
                 return ("El simbolo del elemento no puede estar vacio");
-            
+
             if (unElemento.Numero_Atomico <= 0)
                 return "el numero atomico no puede ser menor o igual a cero.";
 
