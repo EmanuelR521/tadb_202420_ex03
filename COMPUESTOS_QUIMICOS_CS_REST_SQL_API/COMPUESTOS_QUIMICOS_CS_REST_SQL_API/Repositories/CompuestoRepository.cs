@@ -5,6 +5,7 @@ using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Exceptions;
 using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models;
 using Npgsql;
 using System.Data;
+using System.Text.Json;
 
 namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 {
@@ -72,19 +73,22 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 var conexion = contextoDB.CreateConnection();
                 string procedimiento = "core.p_insertar_compuesto";
 
+                
+                var elementosJson = JsonSerializer.Serialize(compuesto.Elementos);
+
                 var parametros = new
                 {
                     p_nombre = compuesto.Nombre,
                     p_formula_quimica = compuesto.Formula_Quimica,
                     p_masa_molar = compuesto.Masa_Molar,
-                    p_estado_agregacion = compuesto.Estado_Agregacion
+                    p_estado_agregacion = compuesto.Estado_Agregacion,
+                    p_elementos = elementosJson 
                 };
 
-                var cantidadFilas = await conexion
-                    .ExecuteAsync(
-                        procedimiento, 
-                        parametros, 
-                        commandType: CommandType.StoredProcedure);
+                var cantidadFilas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
 
                 if (cantidadFilas != 0)
                     resultadoAccion = true;
@@ -109,6 +113,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             {
                 var conexion = contextoDB.CreateConnection();
                 string procedimiento = "core.p_actualizar_compuesto";
+                var elementosJson = JsonSerializer.Serialize(compuesto.Elementos);
 
                 var parametros = new
                 {
@@ -116,7 +121,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                     p_nombre = compuesto.Nombre,
                     p_formula_quimica = compuesto.Formula_Quimica,
                     p_masa_molar = compuesto.Masa_Molar,
-                    p_estado_agregacion = compuesto.Estado_Agregacion
+                    p_estado_agregacion = compuesto.Estado_Agregacion,
+                    p_elementos = elementosJson
                 };
 
                 var cantidad_filas = await conexion.ExecuteAsync(procedimiento, parametros, commandType: CommandType.StoredProcedure);

@@ -19,5 +19,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models
         [JsonPropertyName("estado_agregacion")]
         public string? Estado_Agregacion { get; set; } = string.Empty;
 
+        [JsonPropertyName("elementos")]
+        public List<ElementoSimplificado> Elementos { get; set; } = new List<ElementoSimplificado>();
+
     }
 }

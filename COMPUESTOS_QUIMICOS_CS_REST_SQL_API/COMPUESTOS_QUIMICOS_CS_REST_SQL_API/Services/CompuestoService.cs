@@ -55,6 +55,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
         }
 
 
+
         public async Task<Compuesto> UpdateAsync(Compuesto unCompuesto)
         {
             string resultadoValidacionDatos = ValidaDatos(unCompuesto);
