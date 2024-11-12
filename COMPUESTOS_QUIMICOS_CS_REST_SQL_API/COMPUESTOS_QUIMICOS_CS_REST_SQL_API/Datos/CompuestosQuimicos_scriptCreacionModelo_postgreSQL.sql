@@ -66,342 +66,49 @@ create extension if not exists "uuid-ossp";
 -- Creación de Tablas Principales
 -- ****************************************
 
--- Tabla de Elementos
 create table core.elementos (
-    id_uuid             uuid default gen_random_uuid() primary key,
-    nombre              varchar(50) not null,
-    simbolo             varchar(5) not null,
-    numero_atomico      integer not null,
-    config_electronica  varchar(50) not null,
+    id_uuid uuid default gen_random_uuid() primary key,
+    nombre varchar(50) not null,
+    simbolo varchar(5) not null,
+    numero_atomico integer not null,
+    config_electronica varchar(50) not null,
     constraint nombre_simbolo_uk unique (nombre, simbolo)
-
 );
 
 comment on table core.elementos is 'Tabla que almacena los elementos químicos';
-comment on column core.elementos.id_uuid is 'uuid del elemento';
-comment on column core.elementos.nombre is 'Nombre completo del elemento';
-comment on column core.elementos.simbolo is 'Símbolo químico del elemento';
-comment on column core.elementos.numero_atomico is 'Número atómico del elemento';
-comment on column core.elementos.config_electronica is 'Configuración electrónica del elemento';
 
-
--- Tabla de Compuestos
 create table core.compuestos (
-    id_uuid             uuid default gen_random_uuid() primary key,
-    nombre              varchar(30) not null,
-    formula_quimica     varchar(30) not null,
-    masa_molar          numeric(6,3) not null,
-    estado_agregacion   varchar(30) not null,
+    id_uuid uuid default gen_random_uuid() primary key,
+    nombre varchar(30) not null,
+    formula_quimica varchar(30) not null,
+    masa_molar numeric(6,3) not null,
+    estado_agregacion varchar(30) not null,
     constraint nombre_formula_quimica_uk unique (nombre, formula_quimica)
 );
 
 comment on table core.compuestos is 'Tabla que almacena los compuestos';
-comment on column core.compuestos.id_uuid is 'uuid del compuesto';
-comment on column core.compuestos.nombre is 'Nombre completo del compuesto';
-comment on column core.compuestos.formula_quimica is 'Fórmula química del compuesto';
-comment on column core.compuestos.masa_molar is 'Masa molar del compuesto en gramos/mol';
-comment on column core.compuestos.estado_agregacion is 'Estado de agregación del compuesto (Ej: sólido, líquido, gaseoso)';
 
--- Tabla de elementos por compuestos
 create table core.elementos_por_compuestos (
-    elemento_uuid uuid not null constraint elementos_fk references core.elementos(id_uuid),
-    compuesto_uuid uuid not null constraint compuestos_fk references core.compuestos(id_uuid),
+    elemento_uuid uuid not null references core.elementos(id_uuid),
+    compuesto_uuid uuid not null references core.compuestos(id_uuid),
     cantidad_atomos integer not null,
     primary key (elemento_uuid, compuesto_uuid)
 );
 
 comment on table core.elementos_por_compuestos is 'Relación de cantidad de átomos de cada elemento en un compuesto';
-comment on column core.elementos_por_compuestos.elemento_uuid is 'uuid del elemento en el compuesto';
-comment on column core.elementos_por_compuestos.compuesto_uuid is 'uuid del compuesto';
-comment on column core.elementos_por_compuestos.cantidad_atomos is 'Cantidad de átomos del elemento en el compuesto';
-
-
--- *****************************
--- Nota: insertar datos de CSV
--- *****************************
-
-
-----------------------------Pasos Siguientes---------------------------------
-
--- ****************************************
--- Creación de Procedimientos Almacenados para CRUD
--- ****************************************
-
-
--- Procedimiento para Insertar un Nuevo Elemento
-create or replace procedure core.p_insertar_elemento(
-    in p_nombre text,
-    in p_simbolo text,
-    in p_numero_atomico int,
-    in p_config_electronica text
-)
-language plpgsql as $$
-
-declare
-    l_total_registros integer;
-
-begin
-    -- Validación de campos nulos o vacíos
-    if p_nombre is null or
-       p_simbolo is null or
-       p_numero_atomico is null or
-       p_config_electronica is null or
-       length(p_nombre) = 0 or
-       length(p_simbolo) = 0 or
-       length(p_config_electronica) = 0 then
-            raise exception 'El nombre, símbolo, número atómico y configuración electrónica no pueden ser nulos o vacíos';
-    end if;
-
-    -- Validación de unicidad para nombre y símbolo
-    select count(*)
-    into l_total_registros
-    from core.elementos
-    where lower(nombre) = lower(p_nombre) or lower(simbolo) = lower(p_simbolo);
-
-    if l_total_registros > 0 then
-        raise exception 'Ya existe un elemento con ese nombre o símbolo';
-    end if;
-
-    -- Inserción del nuevo elemento
-    insert into core.elementos (nombre, simbolo, numero_atomico, config_electronica)
-    values (initcap(p_nombre), upper(p_simbolo), p_numero_atomico, p_config_electronica);
-
-end;
-$$;
-
-
-
--- Procedimiento para Actualizar un Elemento Existente
-create or replace procedure core.p_actualizar_elemento(
-    in p_elemento_uuid uuid,
-    in p_nombre text,
-    in p_simbolo text,
-    in p_numero_atomico int,
-    in p_config_electronica text
-)
-language plpgsql as $$
-
-declare
-    l_total_registros integer;
-
-begin
-    -- Validación de existencia del elemento con el UUID
-    select count(*) into l_total_registros
-    from core.elementos
-    where id_uuid = p_elemento_uuid;
-
-    if l_total_registros = 0 then
-        raise exception 'No existe un elemento registrado con ese UUID';
-    end if;
-
-    -- Validación de campos nulos o vacíos
-    if p_nombre is null or
-       p_simbolo is null or
-       p_numero_atomico is null or
-       p_config_electronica is null or
-       length(p_nombre) = 0 or
-       length(p_simbolo) = 0 or
-       length(p_config_electronica) = 0 then
-            raise exception 'El nombre, símbolo, número atómico y configuración electrónica no pueden ser nulos o vacíos';
-    end if;
-
-    -- Validación de unicidad para nombre y símbolo
-    select count(*) into l_total_registros
-    from core.elementos
-    where (lower(nombre) = lower(p_nombre) or lower(simbolo) = lower(p_simbolo))
-    and id_uuid != p_elemento_uuid;
-
-    if l_total_registros > 0 then
-        raise exception 'Ya existe un elemento con ese nombre o símbolo';
-    end if;
-
-    -- Actualización del elemento con el UUID
-    update core.elementos
-    set nombre = initcap(p_nombre),
-        simbolo = upper(p_simbolo),
-        numero_atomico = p_numero_atomico,
-        config_electronica = p_config_electronica
-    where id_uuid = p_elemento_uuid;
-
-end; $$;
-
-
-
--- Procedimiento para Eliminar un Elemento
-create or replace procedure core.p_eliminar_elemento(
-    in p_elemento_uuid uuid
-)
-language plpgsql as $$
-
-declare
-    l_total_registros integer;
-begin
-    select count(*) into l_total_registros
-    from core.elementos
-    where id_uuid = p_elemento_uuid;
-
-    if l_total_registros = 0 then
-        raise exception 'No existe un elemento registrado con ese UUID';
-    end if;
-
-    -- Eliminación del elemento
-    delete from core.elementos
-    where id_uuid = p_elemento_uuid;
-
-end; $$;
-
--- Procedimiento para Insertar un Nuevo Compuesto
-create or replace procedure core.p_insertar_compuesto(
-    in p_nombre text,
-    in p_formula_quimica text,
-    in p_masa_molar real,
-    in p_estado_agregacion text
-)
-language plpgsql as $$
-
-begin
-    -- Validación de campos nulos o vacíos
-    if p_nombre is null or p_formula_quimica is null then
-        raise exception 'El nombre y la fórmula química no pueden ser nulos';
-    end if;
-
-    -- Inserción del nuevo compuesto
-    insert into core.compuestos (nombre, formula_quimica, masa_molar, estado_agregacion)
-    values (initcap(p_nombre), p_formula_quimica, p_masa_molar, initcap(p_estado_agregacion));
-
-end; $$;
-
-
-
--- Procedimiento para Actualizar un Compuesto
-create or replace procedure core.p_actualizar_compuesto(
-    in p_compuesto_uuid uuid,
-    in p_nombre text,
-    in p_formula_quimica text,
-    in p_masa_molar real,
-    in p_estado_agregacion text
-)
-language plpgsql as $$
-
-declare
-    l_total_registros integer;
-
-begin
-    -- Verificación de existencia del compuesto
-    select count(*) into l_total_registros from core.compuestos where id_uuid = p_compuesto_uuid;
-    if l_total_registros = 0 then
-        raise exception 'No existe un compuesto registrado con ese UUID';
-    end if;
-
-    -- Actualización del compuesto
-    update core.compuestos
-    set nombre = initcap(p_nombre),
-        formula_quimica = p_formula_quimica,
-        masa_molar = p_masa_molar,
-        estado_agregacion = initcap(p_estado_agregacion)
-    where id_uuid = p_compuesto_uuid;
-end; $$;
-
-
----administrarán la relación entre elementos y compuestos para la API
-
-
-create or replace procedure core.p_eliminar_compuesto(
-    in p_compuesto_uuid uuid
-)
-language plpgsql as $$
-
-declare
-    l_total_registros integer;
-
-begin
-
-    select count(*) into l_total_registros from core.compuestos where id_uuid = p_compuesto_uuid;
-    if l_total_registros = 0 then
-        raise exception 'No existe un compuesto registrado con ese UUID';
-    end if;
-
-
-    delete from core.compuestos where id_uuid = p_compuesto_uuid;
-end; $$;
-
-
-create or replace procedure core.p_insertar_elemento_en_compuesto(
-    in p_elemento_uuid uuid,
-    in p_compuesto_uuid uuid,
-    in p_cantidad_atomos integer
-)
-language plpgsql as $$
-declare
-    l_elemento_existe integer;
-    l_compuesto_existe integer;
-    l_relacion_existe integer;
-begin
-
-    select count(*) into l_elemento_existe
-    from core.elementos
-    where id_uuid = p_elemento_uuid;
-
-    if l_elemento_existe = 0 then
-        raise exception 'El elemento con el UUID especificado no existe';
-    end if;
-
-
-    select count(*) into l_compuesto_existe
-    from core.compuestos
-    where id_uuid = p_compuesto_uuid;
-
-    if l_compuesto_existe = 0 then
-        raise exception 'El compuesto con el UUID especificado no existe';
-    end if;
-
-
-    select count(*) into l_relacion_existe
-    from core.elementos_por_compuestos
-    where elemento_uuid = p_elemento_uuid
-      and compuesto_uuid = p_compuesto_uuid;
-
-    if l_relacion_existe > 0 then
-        raise exception 'Ya existe una relación entre el elemento y el compuesto especificados';
-    end if;
-
-
-    insert into core.elementos_por_compuestos (elemento_uuid, compuesto_uuid, cantidad_atomos)
-    values (p_elemento_uuid, p_compuesto_uuid, p_cantidad_atomos);
-
-end; $$;
-
-create or replace procedure core.p_eliminar_elemento_de_compuesto(
-    in p_elemento_uuid uuid,
-    in p_compuesto_uuid uuid
-)
-language plpgsql as $$
-declare
-    l_relacion_existe integer;
-begin
-
-    select count(*) into l_relacion_existe
-    from core.elementos_por_compuestos
-    where elemento_uuid = p_elemento_uuid
-      and compuesto_uuid = p_compuesto_uuid;
-
-    if l_relacion_existe = 0 then
-        raise exception 'No existe una relación entre el elemento y el compuesto especificados';
-    end if;
-
-    delete from core.elementos_por_compuestos
-    where elemento_uuid = p_elemento_uuid
-      and compuesto_uuid = p_compuesto_uuid;
-
-end; $$;
-
 
 -- ****************************************
 -- Creación de Vistas de Consulta
 -- ****************************************
 
---listar los compuestos
--- Vista v_info_compuestos
+-- Listar todos los elementos
+create or replace view core.v_info_elementos as
+select id_uuid, nombre, simbolo, numero_atomico, config_electronica
+from core.elementos;
+
+comment on view core.v_info_elementos is 'Vista que muestra la información básica de cada elemento';
+
+-- Listar todos los compuestos
 create or replace view core.v_info_compuestos as
 select
     c.id_uuid as compuesto_uuid,
@@ -421,81 +128,326 @@ from
 
 comment on view core.v_info_compuestos is 'Vista que muestra cada compuesto con sus elementos y cantidades de átomos';
 
-
--- Listar todos los elementos
--- Vista v_info_elementos
-create or replace view core.v_info_elementos as
-select
-    id_uuid,
-    nombre,
-    simbolo,
-    numero_atomico,
-    config_electronica
-from core.elementos;
-
-comment on view core.v_info_elementos is 'Vista que muestra la información básica de cada elemento';
-
-
-
 -- ****************************************
--- Creación Consultas listar por guid
+-- Creación de Procedimientos y Funciones para CRUD
 -- ****************************************
 
---listar un elemento por guid
-select * from core.elementos where id_uuid = '[uuid]';
+CREATE OR REPLACE PROCEDURE core.p_obtener_elemento_por_guid(
+    p_id_uuid UUID
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_nombre VARCHAR;
+    v_simbolo VARCHAR;
+    v_numero_atomico INTEGER;
+    v_config_electronica VARCHAR;
+BEGIN
+    -- Obtener el elemento por UUID
+    SELECT nombre, simbolo, numero_atomico, config_electronica
+    INTO v_nombre, v_simbolo, v_numero_atomico, v_config_electronica
+    FROM core.elementos
+    WHERE id_uuid = p_id_uuid;
 
---listar un compuesto por guid
-select * from core.v_info_compuestos where compuesto_uuid = '[uuid]';
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Elemento no encontrado con el GUID: %', p_id_uuid;
+    END IF;
 
 
--- *******************************************
--- Realizar Pruebas sin insercion de data csv
--- *******************************************
+    RAISE NOTICE 'Elemento UUID: %, Nombre: %, Símbolo: %, Número Atómico: %, Config. Electrónica: %',
+                 p_id_uuid, v_nombre, v_simbolo, v_numero_atomico, v_config_electronica;
+END;
+$$;
 
--- Insertar un nuevo elemento (Hidrógeno)
-call core.p_insertar_elemento(
-    p_nombre := 'Hidrógeno',
-    p_simbolo := 'H',
-    p_numero_atomico := 1,
-    p_config_electronica := '1s1');
 
-call core.p_insertar_elemento(
-    p_nombre := 'Fósforo',
-    p_simbolo := 'fo',
-    p_numero_atomico := 15,
-    p_config_electronica := '1s2 2s2 2p6 3s2 3p3');
+-- Insertar un nuevo elemento
+create or replace procedure core.p_insertar_elemento(
+    in p_nombre text,
+    in p_simbolo text,
+    in p_numero_atomico int,
+    in p_config_electronica text
+)
+language plpgsql as $$
 
--- Ver todos los elementos y compuestos
-select * from core.elementos;
-select * from core.compuestos;
+declare
+    l_total_registros integer;
 
--- Insertar un nuevo compuesto (Agua - H2O)
+begin
+    if p_nombre is null or p_simbolo is null or p_numero_atomico is null or p_config_electronica is null or
+       length(p_nombre) = 0 or length(p_simbolo) = 0 or length(p_config_electronica) = 0 then
+        raise exception 'El nombre, símbolo, número atómico y configuración electrónica no pueden ser nulos o vacíos';
+    end if;
+
+    select count(*) into l_total_registros
+    from core.elementos
+    where lower(nombre) = lower(p_nombre) or lower(simbolo) = lower(p_simbolo);
+
+    if l_total_registros > 0 then
+        raise exception 'Ya existe un elemento con ese nombre o símbolo';
+    end if;
+
+    insert into core.elementos (nombre, simbolo, numero_atomico, config_electronica)
+    values (initcap(p_nombre), upper(p_simbolo), p_numero_atomico, p_config_electronica);
+
+end; $$;
+
+-- Actualizar un elemento
+create or replace procedure core.p_actualizar_elemento(
+    in p_elemento_uuid uuid,
+    in p_nombre text,
+    in p_simbolo text,
+    in p_numero_atomico int,
+    in p_config_electronica text
+)
+language plpgsql as $$
+
+declare
+    l_total_registros integer;
+
+begin
+    select count(*) into l_total_registros
+    from core.elementos
+    where id_uuid = p_elemento_uuid;
+
+    if l_total_registros = 0 then
+        raise exception 'No existe un elemento registrado con ese UUID';
+    end if;
+
+    if p_nombre is null or p_simbolo is null or p_numero_atomico is null or p_config_electronica is null or
+       length(p_nombre) = 0 or length(p_simbolo) = 0 or length(p_config_electronica) = 0 then
+        raise exception 'El nombre, símbolo, número atómico y configuración electrónica no pueden ser nulos o vacíos';
+    end if;
+
+    select count(*) into l_total_registros
+    from core.elementos
+    where (lower(nombre) = lower(p_nombre) or lower(simbolo) = lower(p_simbolo))
+    and id_uuid != p_elemento_uuid;
+
+    if l_total_registros > 0 then
+        raise exception 'Ya existe un elemento con ese nombre o símbolo';
+    end if;
+
+    update core.elementos
+    set nombre = initcap(p_nombre),
+        simbolo = upper(p_simbolo),
+        numero_atomico = p_numero_atomico,
+        config_electronica = p_config_electronica
+    where id_uuid = p_elemento_uuid;
+
+end; $$;
+
+-- Eliminar un elemento
+create or replace procedure core.p_eliminar_elemento(
+    in p_elemento_uuid uuid
+)
+language plpgsql as $$
+
+declare
+    l_total_registros integer;
+begin
+    select count(*) into l_total_registros
+    from core.elementos
+    where id_uuid = p_elemento_uuid;
+
+    if l_total_registros = 0 then
+        raise exception 'No existe un elemento registrado con ese UUID';
+    end if;
+
+    delete from core.elementos
+    where id_uuid = p_elemento_uuid;
+
+end; $$;
+
+-- Listar un compuesto por GUID con sus elementos
+CREATE OR REPLACE PROCEDURE core.p_obtener_compuesto_por_guid(
+    p_compuesto_uuid UUID
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_compuesto_nombre VARCHAR;
+    v_compuesto_formula VARCHAR;
+    v_compuesto_peso_molecular REAL;
+    v_compuesto_estado VARCHAR;
+    v_elemento RECORD;
+BEGIN
+    -- Obtener el compuesto por UUID
+    SELECT nombre, formula_quimica, masa_molar::real, estado_agregacion
+    INTO v_compuesto_nombre, v_compuesto_formula, v_compuesto_peso_molecular, v_compuesto_estado
+    FROM core.compuestos
+    WHERE id_uuid = p_compuesto_uuid;
+
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Compuesto no encontrado con el GUID: %', p_compuesto_uuid;
+    END IF;
+
+
+    RAISE NOTICE 'Compuesto UUID: %, Nombre: %, Fórmula: %, Peso Molecular: %, Estado: %',
+                 p_compuesto_uuid, v_compuesto_nombre, v_compuesto_formula, v_compuesto_peso_molecular, v_compuesto_estado;
+
+
+    FOR v_elemento IN
+        SELECT e.id_uuid, epc.cantidad_atomos
+        FROM core.elementos_por_compuestos epc
+        JOIN core.elementos e ON e.id_uuid = epc.elemento_uuid
+        WHERE epc.compuesto_uuid = p_compuesto_uuid
+    LOOP
+        -- Mostrar los elementos
+        RAISE NOTICE 'Elemento UUID: %, Cantidad de átomos: %', v_elemento.id_uuid, v_elemento.cantidad_atomos;
+    END LOOP;
+END;
+$$;
+
+
+--actualizar compuesto
+CREATE OR REPLACE PROCEDURE core.p_actualizar_compuesto(
+    p_compuesto_uuid UUID,
+    p_nombre_compuesto VARCHAR,
+    p_formula_compuesto VARCHAR,
+    p_peso_molecular REAL,
+    p_estado_compuesto VARCHAR,
+    p_elementos JSON
+) LANGUAGE plpgsql AS $$
+DECLARE
+    v_elemento JSON;
+    v_elemento_uuid UUID;
+    v_cantidad_atomos INT;
+BEGIN
+
+    UPDATE core.compuestos
+    SET nombre = initcap(p_nombre_compuesto),
+        formula_quimica = p_formula_compuesto,
+        masa_molar = p_peso_molecular,
+        estado_agregacion = initcap(p_estado_compuesto)
+    WHERE id_uuid = p_compuesto_uuid;
+
+
+    FOR v_elemento IN
+        SELECT * FROM json_array_elements(p_elementos)
+    LOOP
+
+        v_elemento_uuid := (v_elemento->>'elemento_uuid')::UUID;
+        v_cantidad_atomos := (v_elemento->>'cantidad_atomos')::INT;
+
+
+        RAISE NOTICE 'Elemento UUID: %, Cantidad de átomos: %', v_elemento_uuid, v_cantidad_atomos;
+
+
+        UPDATE core.elementos_por_compuestos
+        SET cantidad_atomos = v_cantidad_atomos
+        WHERE compuesto_uuid = p_compuesto_uuid AND elemento_uuid = v_elemento_uuid;
+    END LOOP;
+END;
+$$;
+
+-- Insertar un nuevo compuesto incluyendo elementos
+create or replace procedure core.p_insertar_compuesto(
+    in p_nombre varchar(50),
+    in p_formula_quimica varchar(50),
+    in p_masa_molar real,
+    in p_estado_agregacion varchar(30),
+    in p_elementos json
+)
+language plpgsql as $$
+declare
+    v_compuesto_uuid uuid;
+    v_elemento json;
+    v_elemento_uuid uuid;
+    v_cantidad_atomos int;
+begin
+
+    if p_nombre is null or p_formula_quimica is null then
+        raise exception 'El nombre y la fórmula química no pueden ser nulos';
+    end if;
+
+    insert into core.compuestos (nombre, formula_quimica, masa_molar, estado_agregacion)
+    values (initcap(p_nombre), p_formula_quimica, p_masa_molar, initcap(p_estado_agregacion))
+    returning id_uuid into v_compuesto_uuid;
+
+
+    for v_elemento in select * from json_array_elements(p_elementos) loop
+
+        v_elemento_uuid := (v_elemento->>'elemento_uuid')::uuid;
+        v_cantidad_atomos := (v_elemento->>'cantidad_atomos')::int;
+
+        insert into core.elementos_por_compuestos (elemento_uuid, compuesto_uuid, cantidad_atomos)
+        values (v_elemento_uuid, v_compuesto_uuid, v_cantidad_atomos);
+    end loop;
+
+end;
+$$;
+
+
+-- Eliminar un compuesto
+create or replace procedure core.p_eliminar_compuesto(
+    in p_compuesto_uuid uuid
+)
+language plpgsql as $$
+
+declare
+    l_total_registros integer;
+begin
+    select count(*) into l_total_registros
+    from core.compuestos
+    where id_uuid = p_compuesto_uuid;
+
+    if l_total_registros = 0 then
+        raise exception 'No existe un compuesto registrado con ese UUID';
+    end if;
+
+    delete from core.elementos_por_compuestos
+    WHERE compuesto_uuid = p_compuesto_uuid;
+
+    delete from core.compuestos
+    where id_uuid = p_compuesto_uuid;
+
+end; $$;
+
+
+--***************
+--zona de pruebas
+--***************
+
+call core.p_insertar_elemento('Fosforo', 'fo', 15, '1s1 1s3');
+select * from core.v_info_elementos;
+call core.p_obtener_elemento_por_guid('123e4567-e89b-12d3-a456-426614174000');
+call core.p_actualizar_elemento('49c9e626-61af-476f-8e21-e39c2aeb26aa', 'Hidrógeno Actualizado', 'H', 1, '1s1 Actualizado');
+call core.p_eliminar_elemento('49c9e626-61af-476f-8e21-e39c2aeb26aa');
+
+-- Insertar Hidrógeno
+INSERT INTO core.elementos (id_uuid, nombre, simbolo, numero_atomico, config_electronica)
+VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Hidrógeno', 'H', 1, '1s1');
+
+-- Insertar Oxígeno
+INSERT INTO core.elementos (id_uuid, nombre, simbolo, numero_atomico, config_electronica)
+VALUES ('987e4567-e89b-12d3-a456-426614174111', 'Oxígeno', 'O', 8, '1s2 2s2 2p4');
+
+
 call core.p_insertar_compuesto(
-    p_nombre := 'Agua',
-    p_formula_quimica := 'H2O',
-    p_masa_molar := 18.015,
-    p_estado_agregacion := 'Líquido');
+    'Agua',
+    'H2O',
+    18.015,
+    'Líquido',
+    '[{"elemento_uuid": "123e4567-e89b-12d3-a456-426614174000", "cantidad_atomos": 2}, {"elemento_uuid": "987e4567-e89b-12d3-a456-426614174111", "cantidad_atomos": 1}]'
+);
 
--- Actualizar el nombre y configuración electrónica de un elemento usando su UUID
-call core.p_actualizar_elemento(
-    p_elemento_uuid := '2ab39ed3-8c9c-44bc-9934-56ec869eb73c',
-    p_nombre := 'Hidrógeno Modificado',
-    p_simbolo := 'H',
-    p_numero_atomico := 1,
-    p_config_electronica := '1s2');
+select * from core.compuestos;
+select * from core.elementos;
+select * from core.v_info_compuestos;
+select * from core.v_info_elementos;
 
--- Actualizar la fórmula química y masa molar de un compuesto usando su UUID
-call core.p_actualizar_compuesto(
-    p_compuesto_uuid := 'f90d717d-5f25-4553-aae9-c0925d238b0f',
-    p_nombre := 'Agua Modificada',
-    p_formula_quimica := 'H2O2',
-    p_masa_molar := 36.030,
-    p_estado_agregacion := 'Líquido');
+CALL core.p_actualizar_compuesto(
+    '33219da0-c9c1-49f5-8bfc-f407e36d233f',
+    'Agua Modificada',
+    'H2O',
+    18.015,
+    'Líquido Modificado',
+    '[{"elemento_uuid": "123e4567-e89b-12d3-a456-426614174000", "cantidad_atomos": 2},
+      {"elemento_uuid": "987e4567-e89b-12d3-a456-426614174111", "cantidad_atomos": 1}]'::json
+);
 
+call core.p_eliminar_compuesto('33219da0-c9c1-49f5-8bfc-f407e36d233f');
+call core.p_obtener_compuesto_por_guid('1d145cbd-d06d-4cf0-8f35-214caf413cd2');
 
--- Eliminar un elemento (Hidrógeno) por su UUID
-call core.p_eliminar_elemento(p_elemento_uuid := '8a4e5691-4508-471c-abaa-4061dfbe3a40');
-
--- Eliminar un compuesto (Agua) por su UUID
-call core.p_eliminar_compuesto(p_compuesto_uuid := '91463ce4-913c-46ee-ad63-fe823ba61573');
-
+select * from core.v_info_compuestos;
