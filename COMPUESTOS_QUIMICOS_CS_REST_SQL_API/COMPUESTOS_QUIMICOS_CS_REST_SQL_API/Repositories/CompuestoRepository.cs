@@ -31,16 +31,16 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
             using var conexion = contextoDB.CreateConnection();
 
-            DynamicParameters parametrosSentencia = new();
-            parametrosSentencia.Add("@uuid", compuestoGuid,
-                                    DbType.Guid, ParameterDirection.Input);
+            string procedure = "core.p_obtener_compuesto_por_uuid";
+            var parametros = new { p_compuesto_uuid = compuestoGuid };
+            var dynamicParams = new DynamicParameters(parametros);
+            dynamicParams.Add("p_resultado", dbType: DbType.String, direction: ParameterDirection.Output);
 
-            string sentenciaSQL = "SELECT id_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE id_uuid = @uuid";
+            await conexion.ExecuteAsync(procedure, dynamicParams, commandType: CommandType.StoredProcedure);
 
-            var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
+            var resultado = dynamicParams.Get<string>("p_resultado");
+            unCompuesto = JsonSerializer.Deserialize<Compuesto>(resultado);
 
-            if(resultado.Any())
-                unCompuesto = resultado.First();
 
             return unCompuesto;
         }

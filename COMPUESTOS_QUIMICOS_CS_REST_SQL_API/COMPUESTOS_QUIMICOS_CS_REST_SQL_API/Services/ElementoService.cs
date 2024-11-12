@@ -109,6 +109,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
         }
 
 
+
         private static string ValidaDatos(Elemento unElemento)
         {
             if (string.IsNullOrEmpty(unElemento.Nombre))
