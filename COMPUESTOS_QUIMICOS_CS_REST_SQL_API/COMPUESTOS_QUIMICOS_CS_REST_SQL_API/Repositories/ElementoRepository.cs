@@ -16,9 +16,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
         {
             var conexion = contextoDB.CreateConnection();
 
-            string sentenciaSQL =
-                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica" +
-                "FROM core.elementos ORDER BY nombre";
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos ORDER BY nombre";
 
             var resultadoElementos = await conexion
                 .QueryAsync<Elemento>(sentenciaSQL, new DynamicParameters());
@@ -33,14 +31,10 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             var conexion = contextoDB.CreateConnection();
 
             DynamicParameters parametrosSentencia = new();
-            parametrosSentencia.Add("@elemento_guid", elemento_guid,
+            parametrosSentencia.Add("@uuid", elemento_guid,
                                     DbType.Guid, ParameterDirection.Input);
 
-            string sentenciaSQL =
-                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, config_electronica" +
-                "FROM core.elementos " +
-                "WHERE elemento_uuid = @elemento_guid ";
-
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, simbolo, numero_atomico, config_electronica FROM core.elementos WHERE id_uuid = @uuid";
 
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
@@ -58,11 +52,10 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             var conexion = contextoDB.CreateConnection();
 
             DynamicParameters parametrosSentencia = new();
-            parametrosSentencia.Add("@elemento_nombre", elemento_nombre,
+            parametrosSentencia.Add("@elementoNombre", elemento_nombre,
                                     DbType.String, ParameterDirection.Input);
 
-            string sentenciaSQL =
-                "SELECT distinct elementos FROM core.v_info_elementos WHERE LOWER(elemento) = LOWER(@elemento_nombre)";
+            string sentenciaSQL ="SELECT distinct nombre FROM core.v_info_elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
 
             var resultado = await conexion.QueryAsync<string>(sentenciaSQL,
                 parametrosSentencia);
@@ -104,7 +97,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             }
             catch (NpgsqlException error)
             {
-                throw new DbOperationException(error.Message);
+                throw new DbOperationException($"Error al crear el elemento: {error.Message}");
             }
 
             return resultadoAccion;
@@ -116,7 +109,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 
             var elementoExistente = await GetByGuidAsync(unElemento.Uuid);
 
-            if (elementoExistente.Uuid == Guid.Empty)
+            if (elementoExistente == null || elementoExistente.Uuid == Guid.Empty)
                 throw new DbOperationException($"No se puede actualizar. No existe el elemento {unElemento.Nombre!}.");
 
             try
@@ -126,7 +119,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 string procedimiento = "core.p_actualizar_elemento";
                 var parametros = new
                 {
-                    p_uuid = unElemento.Uuid,
+                    p_elemento_uuid = unElemento.Uuid,
                     p_nombre = unElemento.Nombre,
                     p_simbolo = unElemento.Simbolo,
                     p_numero_atomico = unElemento.Numero_Atomico,
@@ -161,7 +154,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 string procedimiento = "core.p_eliminar_elemento";
                 var parametros = new
                 {
-                    p_uuid = elemento_guid
+                    p_elemento_uuid = elemento_guid
                 };
 
                 var cantidad_filas = await conexion.ExecuteAsync(

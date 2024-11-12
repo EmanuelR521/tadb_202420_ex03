@@ -16,7 +16,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
         {
             using var conexion = contextoDB.CreateConnection();
 
-            string sentenciaSQL = "SELECT compuesto_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos ORDER BY nombre";
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos ORDER BY nombre";
 
             var resultadoCompuestos = await conexion.QueryAsync<Compuesto>(sentenciaSQL, new DynamicParameters());
             return resultadoCompuestos.ToList();
@@ -33,7 +33,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@uuid", compuestoGuid,
                                     DbType.Guid, ParameterDirection.Input);
 
-            string sentenciaSQL = "SELECT compuesto_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE compuesto_uuid = @uuid";
+            string sentenciaSQL = "SELECT id_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos WHERE id_uuid = @uuid";
 
             var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
 
@@ -152,10 +152,6 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 if (cantidad_filas != 0)
                     resultadoAccion = true;
 
-                if (cantidad_filas == 0)
-                {
-                    throw new AppValidationException("No se encontró ningún compuesto para eliminar con el GUID proporcionado.");
-                }
 
             }
             catch (NpgsqlException ex)

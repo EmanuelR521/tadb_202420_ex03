@@ -11,16 +11,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
     {
         private readonly ElementoService _elementoService = elementoService;
 
-
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {
             var losElementos = await _elementoService.GetAllAsync();
-
             return Ok(losElementos);
         }
 
-        [HttpGet("{compuesto_guid:Guid}")]
+        [HttpGet("{elemento_guid:Guid}")]
         public async Task<IActionResult> GetByGuidAsync(Guid elemento_guid)
         {
             try

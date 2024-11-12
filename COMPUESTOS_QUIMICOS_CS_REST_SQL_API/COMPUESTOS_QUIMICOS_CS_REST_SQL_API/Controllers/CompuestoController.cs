@@ -24,7 +24,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
         {
             try
             {
-                var unCompuesto = await _compuestoService.GetByGuidAsync(compuesto_guid);
+                var unCompuesto = await _compuestoService
+                    .GetByGuidAsync(compuesto_guid);
+
                 return Ok(unCompuesto);
             }
             catch (AppValidationException error)
@@ -32,6 +34,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
                 return NotFound(error.Message);
             }
         }
+
+
 
 
         [HttpPost]
@@ -55,15 +59,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
         }
 
 
-        [HttpPut("{compuesto_guid:Guid}")]
-        public async Task<IActionResult> UpdateAsync(Guid compuesto_guid, [FromBody] Compuesto unCompuesto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync(Compuesto unCompuesto)
         {
-            if (unCompuesto.Uuid != compuesto_guid)
-                return BadRequest("El GUID del compuesto no coincide con el de la solicitud.");
-
             try
             {
-                var compuestoActualizado = await _compuestoService.UpdateAsync(unCompuesto);
+                var compuestoActualizado = await _compuestoService
+                    .UpdateAsync(unCompuesto);
+
                 return Ok(compuestoActualizado);
             }
             catch (AppValidationException error)
@@ -77,12 +80,14 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
         }
 
         
-        [HttpDelete("{compuesto_guid:Guid}")]
+        [HttpDelete]
         public async Task<IActionResult> RemoveAsync(Guid compuesto_guid)
         {
             try
             {
-                var compuestoEliminado = await _compuestoService.RemoveAsync(compuesto_guid);
+                var compuestoEliminado = await _compuestoService
+                    .RemoveAsync(compuesto_guid);
+                
                 return Ok(compuestoEliminado);
             }
             catch (AppValidationException error)
