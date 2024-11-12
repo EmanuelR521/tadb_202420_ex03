@@ -7,9 +7,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CompuestoController(ElementoService compuestoService) : Controller
+    public class CompuestoController(CompuestoService compuestoService) : Controller
     {
-        private readonly ElementoService _compuestoService = compuestoService;
+        private readonly CompuestoService _compuestoService = compuestoService;
 
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
