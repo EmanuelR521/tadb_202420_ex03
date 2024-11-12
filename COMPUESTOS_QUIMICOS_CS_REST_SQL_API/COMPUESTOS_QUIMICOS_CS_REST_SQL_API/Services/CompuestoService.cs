@@ -9,7 +9,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
         private readonly ICompuestoRepository _compuestoRepository = compuestoRepository;
 
         
-        public async Task<List<Compuesto>> GetAllAsync()
+        public async Task<List<CompuestoSimplificado>> GetAllAsync()
         {
             return await _compuestoRepository.GetAllAsync();
         }

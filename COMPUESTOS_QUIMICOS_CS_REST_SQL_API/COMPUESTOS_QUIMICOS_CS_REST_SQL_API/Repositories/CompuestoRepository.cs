@@ -14,13 +14,13 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
     {
         private readonly PgsqlDbContext contextoDB = contexto;
 
-        public async Task<List<Compuesto>> GetAllAsync()
+        public async Task<List<CompuestoSimplificado>> GetAllAsync()
         {
             using var conexion = contextoDB.CreateConnection();
 
             string sentenciaSQL = "SELECT id_uuid uuid, nombre, formula_quimica, masa_molar, estado_agregacion FROM core.compuestos ORDER BY nombre";
 
-            var resultadoCompuestos = await conexion.QueryAsync<Compuesto>(sentenciaSQL, new DynamicParameters());
+            var resultadoCompuestos = await conexion.QueryAsync<CompuestoSimplificado>(sentenciaSQL, new DynamicParameters());
             return resultadoCompuestos.ToList();
         }
 
