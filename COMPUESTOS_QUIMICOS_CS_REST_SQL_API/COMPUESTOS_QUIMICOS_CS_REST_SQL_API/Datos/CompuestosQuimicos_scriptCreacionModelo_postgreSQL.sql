@@ -302,44 +302,50 @@ $$;
 
 --actualizar compuesto
 CREATE OR REPLACE PROCEDURE core.p_actualizar_compuesto(
-    p_compuesto_uuid UUID,
-    p_nombre_compuesto VARCHAR,
-    p_formula_compuesto VARCHAR,
-    p_peso_molecular REAL,
-    p_estado_compuesto VARCHAR,
-    p_elementos JSON
-) LANGUAGE plpgsql AS $$
+    IN p_compuesto_uuid uuid,
+    IN p_nombre text,
+    IN p_formula_quimica text,
+    IN p_masa_molar numeric,
+    IN p_estado_agregacion text,
+    IN p_elementos text
+)
+LANGUAGE plpgsql
+AS $procedure$
 DECLARE
     v_elemento JSON;
     v_elemento_uuid UUID;
     v_cantidad_atomos INT;
 BEGIN
+    IF p_nombre IS NULL OR p_formula_quimica IS NULL THEN
+        RAISE EXCEPTION 'El nombre y la fórmula química no pueden ser nulos';
+    END IF;
+
+    IF p_compuesto_uuid IS NULL THEN
+        RAISE EXCEPTION 'El UUID del compuesto no puede ser nulo';
+    END IF;
 
     UPDATE core.compuestos
-    SET nombre = initcap(p_nombre_compuesto),
-        formula_quimica = p_formula_compuesto,
-        masa_molar = p_peso_molecular,
-        estado_agregacion = initcap(p_estado_compuesto)
+    SET nombre = initcap(p_nombre),
+        formula_quimica = p_formula_quimica,
+        masa_molar = p_masa_molar,
+        estado_agregacion = initcap(p_estado_agregacion)
     WHERE id_uuid = p_compuesto_uuid;
 
-
     FOR v_elemento IN
-        SELECT * FROM json_array_elements(p_elementos)
+    SELECT * FROM json_array_elements(p_elementos::json)
     LOOP
-
         v_elemento_uuid := (v_elemento->>'elemento_uuid')::UUID;
         v_cantidad_atomos := (v_elemento->>'cantidad_atomos')::INT;
 
-
         RAISE NOTICE 'Elemento UUID: %, Cantidad de átomos: %', v_elemento_uuid, v_cantidad_atomos;
-
 
         UPDATE core.elementos_por_compuestos
         SET cantidad_atomos = v_cantidad_atomos
-        WHERE compuesto_uuid = p_compuesto_uuid AND elemento_uuid = v_elemento_uuid;
+        WHERE compuesto_uuid = p_compuesto_uuid 
+        AND elemento_uuid = v_elemento_uuid;
     END LOOP;
 END;
-$$;
+$procedure$;
 
 -- Insertar un nuevo compuesto incluyendo elementos
 CREATE OR REPLACE PROCEDURE core.p_insertar_compuesto(IN p_nombre text, IN p_formula_quimica text, IN p_masa_molar numeric, IN p_estado_agregacion text, IN p_elementos text)
