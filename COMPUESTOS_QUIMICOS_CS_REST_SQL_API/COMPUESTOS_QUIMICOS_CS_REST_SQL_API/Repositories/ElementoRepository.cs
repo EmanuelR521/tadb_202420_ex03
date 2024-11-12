@@ -56,7 +56,8 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@elementoNombre", elemento_nombre,
                                     DbType.String, ParameterDirection.Input);
 
-            string sentenciaSQL ="SELECT * FROM core.elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
+            string sentenciaSQL ="SELECT id_uuid uuid, nombre,simbolo,numero_atomico,config_electronica" +
+                " FROM core.v_info_elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
 
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
