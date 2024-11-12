@@ -6,6 +6,7 @@ using COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models;
 using Npgsql;
 using System.Data;
 using System.Text.Json;
+using NpgsqlTypes;
 
 namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
 {
@@ -45,9 +46,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
         }
 
 
-        public async Task<string> GetCompuestoByNameAsync(string compuestoNombre)
+        public async Task<Compuesto> GetCompuestoByNameAsync(string compuestoNombre)
         {
-            string nombreCompuesto = string.Empty;
+            Compuesto nombreCompuesto = new();
            
             var conexion = contextoDB.CreateConnection();
 
@@ -55,9 +56,9 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             parametrosSentencia.Add("@compuestoNombre", compuestoNombre,
                                     DbType.String, ParameterDirection.Input);
 
-            string sentenciaSQL = "SELECT distinct compuesto_nombre FROM core.v_info_compuestos WHERE LOWER(compuesto_nombre) = LOWER(@compuestoNombre)";
+            string sentenciaSQL = "SELECT id_uuid uuid,nombre,formula_quimica,masa_molar,estado_agregacion FROM core.compuestos WHERE LOWER(nombre) = LOWER(@compuestoNombre)";
 
-            var resultado = await conexion.QueryAsync<string>(sentenciaSQL, parametrosSentencia);
+            var resultado = await conexion.QueryAsync<Compuesto>(sentenciaSQL, parametrosSentencia);
 
             if(resultado.Any())
                 nombreCompuesto = resultado.First();
@@ -73,8 +74,15 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                 var conexion = contextoDB.CreateConnection();
                 string procedimiento = "core.p_insertar_compuesto";
 
-                
+
+
+
+
+
                 var elementosJson = JsonSerializer.Serialize(compuesto.Elementos);
+
+
+
 
                 var parametros = new
                 {
@@ -82,7 +90,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
                     p_formula_quimica = compuesto.Formula_Quimica,
                     p_masa_molar = compuesto.Masa_Molar,
                     p_estado_agregacion = compuesto.Estado_Agregacion,
-                    p_elementos = elementosJson 
+                    p_elementos = elementosJson
                 };
 
                 var cantidadFilas = await conexion.ExecuteAsync(

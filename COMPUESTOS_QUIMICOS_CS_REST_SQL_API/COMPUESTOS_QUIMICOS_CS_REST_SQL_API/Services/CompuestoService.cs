@@ -35,7 +35,7 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Services
 
             var compuestoExistente = await _compuestoRepository.GetCompuestoByNameAsync(unCompuesto.Nombre!);
 
-            if (!string.IsNullOrEmpty(compuestoExistente))
+            if (!string.IsNullOrEmpty(compuestoExistente.Nombre!))
                 throw new AppValidationException($"Ya existe un compuesto registrado con el nombre {unCompuesto.Nombre}");
 
             try

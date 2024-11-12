@@ -342,21 +342,15 @@ END;
 $$;
 
 -- Insertar un nuevo compuesto incluyendo elementos
-create or replace procedure core.p_insertar_compuesto(
-    in p_nombre varchar(50),
-    in p_formula_quimica varchar(50),
-    in p_masa_molar real,
-    in p_estado_agregacion varchar(30),
-    in p_elementos json
-)
-language plpgsql as $$
+CREATE OR REPLACE PROCEDURE core.p_insertar_compuesto(IN p_nombre text, IN p_formula_quimica text, IN p_masa_molar numeric, IN p_estado_agregacion text, IN p_elementos text)
+ LANGUAGE plpgsql
+AS $procedure$
 declare
     v_compuesto_uuid uuid;
     v_elemento json;
     v_elemento_uuid uuid;
     v_cantidad_atomos int;
 begin
-
     if p_nombre is null or p_formula_quimica is null then
         raise exception 'El nombre y la fórmula química no pueden ser nulos';
     end if;
@@ -365,18 +359,17 @@ begin
     values (initcap(p_nombre), p_formula_quimica, p_masa_molar, initcap(p_estado_agregacion))
     returning id_uuid into v_compuesto_uuid;
 
-
-    for v_elemento in select * from json_array_elements(p_elementos) loop
-
-        v_elemento_uuid := (v_elemento->>'elemento_uuid')::uuid;
+    for v_elemento in select * from json_array_elements(p_elementos::json) loop
+        v_elemento_uuid := (v_elemento->>'uuid')::uuid;
         v_cantidad_atomos := (v_elemento->>'cantidad_atomos')::int;
 
         insert into core.elementos_por_compuestos (elemento_uuid, compuesto_uuid, cantidad_atomos)
         values (v_elemento_uuid, v_compuesto_uuid, v_cantidad_atomos);
     end loop;
-
 end;
-$$;
+$procedure$
+;
+
 
 
 -- Eliminar un compuesto
