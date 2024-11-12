@@ -16,8 +16,11 @@ builder.Services.AddScoped<IElementoRepository, ElementoRepository>();
 builder.Services.AddScoped<ICompuestoRepository, CompuestoRepository>();
 
 //servicios asociados para cada ruta
+
 builder.Services.AddScoped<CompuestoService>();
 builder.Services.AddScoped<ElementoService>();
+
+
 
 builder.Services.AddControllers()
     .AddJsonOptions(

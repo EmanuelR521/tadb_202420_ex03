@@ -1,16 +1,4 @@
-id;nombre;formula_quimica;masa_molar;estado_agregacion;compuesto_uuid
-1;Agua;H2O;18.015;sólido;6f9e57e9-b48f-48ca-8360-c8b1fa4b42d9
-2;Dióxido de carbono;CO2;44.01;gas;2e8d135e-2b19-47a9-b5d3-e1c8f53720f7
-3;Metano;CH4;16.04;gas;1f4f6b45-9028-4eae-a149-d58d3da3157d
-4;Óxido de hierro (III);Fe2O3;159.7;sólido;cf37c415-0ab1-4f59-9b71-438c429df7c7
-5;Cloruro de sodio;NaCl;58.44;sólido;bd37df6e-f2b0-4a62-a3c0-d95e39b7ab87
-6;Ácido sulfúrico;H2SO4;98.079;líquido;8f0803e0-cb65-4c73-b9f0-4c85f3b76a1d
-7;Amoníaco;NH3;17.031;gas;f9a3c295-2456-45b4-995e-9cfe3d89a451
-8;Etanol;C2H5OH;46.07;líquido;897d6b1f-0e0a-4b9b-8ea1-d1b5289c9309
-9;Sulfato de cobre (II);CuSO4;159.61;sólido;a1c24b24-5e48-4e5b-9431-45a2cf1a6e91
-10;Óxido de calcio;CaO;56.08;sólido;b80b5222-d90d-4ea3-8b62-d6bff9be80ea
-11;Nitrato de potasio;KNO3;101.1;sólido;4d3b2e79-bca7-44f5-9b07-dbe283209fc7
-12;Cloro;Cl2;70.906;gas;1ef9f0ae-c94f-4160-b08d-30930072f340
-13;Acetona;C3H6O;58.08;líquido;5ef42b8a-50f4-44b6-9631-602fe513d649
-14;Peróxido de hidrógeno;H2O2;34.014;líquido;473428d7-e937-4fe2-a5fa-9354e244d9f2
-15;Benceno;C6H6;78.11;líquido;2512ed76-739f-44d2-b7c4-e9238d1d6cf7
+nombre;formula_quimica;masa_molar;estado_agregacion
+Agua;H2O;18.02;Liquido
+Dioxido de Carbono;CO2;44.01;Gas
+Glucosa;C6H12O6;180.16;Solido
