@@ -3,7 +3,7 @@
 namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Models
 {
     public class ElementoSimplificado
-    {
+    {   
         [JsonPropertyName("uuid")]
         public Guid Uuid { get; set; } = Guid.Empty;
 

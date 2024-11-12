@@ -132,11 +132,9 @@ comment on view core.v_info_compuestos is 'Vista que muestra cada compuesto con 
 -- Creación de Procedimientos y Funciones para CRUD
 -- ****************************************
 
-CREATE OR REPLACE PROCEDURE core.p_obtener_elemento_por_guid(
-    p_id_uuid UUID
-)
-LANGUAGE plpgsql
-AS $$
+CREATE OR REPLACE PROCEDURE core.p_obtener_elemento_por_guid(IN p_id_uuid uuid)
+ LANGUAGE plpgsql
+AS $procedure$
 DECLARE
     v_nombre VARCHAR;
     v_simbolo VARCHAR;
@@ -157,17 +155,14 @@ BEGIN
     RAISE NOTICE 'Elemento UUID: %, Nombre: %, Símbolo: %, Número Atómico: %, Config. Electrónica: %',
                  p_id_uuid, v_nombre, v_simbolo, v_numero_atomico, v_config_electronica;
 END;
-$$;
+$procedure$
+;
 
 
 -- Insertar un nuevo elemento
-create or replace procedure core.p_insertar_elemento(
-    in p_nombre text,
-    in p_simbolo text,
-    in p_numero_atomico int,
-    in p_config_electronica text
-)
-language plpgsql as $$
+CREATE OR REPLACE PROCEDURE core.p_insertar_elemento(IN p_nombre text, IN p_simbolo text, IN p_numero_atomico integer, IN p_config_electronica text)
+ LANGUAGE plpgsql
+AS $procedure$
 
 declare
     l_total_registros integer;
@@ -189,17 +184,13 @@ begin
     insert into core.elementos (nombre, simbolo, numero_atomico, config_electronica)
     values (initcap(p_nombre), upper(p_simbolo), p_numero_atomico, p_config_electronica);
 
-end; $$;
+end; $procedure$
+;
 
 -- Actualizar un elemento
-create or replace procedure core.p_actualizar_elemento(
-    in p_elemento_uuid uuid,
-    in p_nombre text,
-    in p_simbolo text,
-    in p_numero_atomico int,
-    in p_config_electronica text
-)
-language plpgsql as $$
+CREATE OR REPLACE PROCEDURE core.p_actualizar_elemento(IN p_elemento_uuid uuid, IN p_nombre text, IN p_simbolo text, IN p_numero_atomico integer, IN p_config_electronica text)
+ LANGUAGE plpgsql
+AS $procedure$
 
 declare
     l_total_registros integer;
@@ -234,13 +225,13 @@ begin
         config_electronica = p_config_electronica
     where id_uuid = p_elemento_uuid;
 
-end; $$;
+end; $procedure$
+;
 
 -- Eliminar un elemento
-create or replace procedure core.p_eliminar_elemento(
-    in p_elemento_uuid uuid
-)
-language plpgsql as $$
+CREATE OR REPLACE PROCEDURE core.p_eliminar_elemento(IN p_elemento_uuid uuid)
+ LANGUAGE plpgsql
+AS $procedure$
 
 declare
     l_total_registros integer;
@@ -256,60 +247,43 @@ begin
     delete from core.elementos
     where id_uuid = p_elemento_uuid;
 
-end; $$;
+end; $procedure$
+;
 
 -- Listar un compuesto por GUID con sus elementos
-CREATE OR REPLACE PROCEDURE core.p_obtener_compuesto_por_guid(
-    p_compuesto_uuid UUID
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_compuesto_nombre VARCHAR;
-    v_compuesto_formula VARCHAR;
-    v_compuesto_peso_molecular REAL;
-    v_compuesto_estado VARCHAR;
-    v_elemento RECORD;
+CREATE OR REPLACE PROCEDURE core.p_obtener_compuesto_por_uuid(IN p_compuesto_uuid uuid, OUT p_resultado json)
+ LANGUAGE plpgsql
+AS $procedure$
 BEGIN
-    -- Obtener el compuesto por UUID
-    SELECT nombre, formula_quimica, masa_molar::real, estado_agregacion
-    INTO v_compuesto_nombre, v_compuesto_formula, v_compuesto_peso_molecular, v_compuesto_estado
-    FROM core.compuestos
-    WHERE id_uuid = p_compuesto_uuid;
-
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Compuesto no encontrado con el GUID: %', p_compuesto_uuid;
-    END IF;
-
-
-    RAISE NOTICE 'Compuesto UUID: %, Nombre: %, Fórmula: %, Peso Molecular: %, Estado: %',
-                 p_compuesto_uuid, v_compuesto_nombre, v_compuesto_formula, v_compuesto_peso_molecular, v_compuesto_estado;
-
-
-    FOR v_elemento IN
-        SELECT e.id_uuid, epc.cantidad_atomos
-        FROM core.elementos_por_compuestos epc
-        JOIN core.elementos e ON e.id_uuid = epc.elemento_uuid
-        WHERE epc.compuesto_uuid = p_compuesto_uuid
-    LOOP
-        -- Mostrar los elementos
-        RAISE NOTICE 'Elemento UUID: %, Cantidad de átomos: %', v_elemento.id_uuid, v_elemento.cantidad_atomos;
-    END LOOP;
+    SELECT
+        json_build_object(
+            'uuid', c.id_uuid,
+            'nombre', c.nombre,
+            'formula_quimica', c.formula_quimica,
+            'masa_molar', c.masa_molar,
+            'estado_agregacion', c.estado_agregacion,
+            'elementos', (
+                SELECT json_agg(
+                    json_build_object(
+                        'uuid', ec.elemento_uuid,
+                        'cantidad_atomos', ec.cantidad_atomos
+                    )
+                )
+                FROM core.elementos_por_compuestos ec
+                WHERE ec.compuesto_uuid = c.id_uuid
+            )
+        )
+    INTO p_resultado
+    FROM core.compuestos c
+    WHERE c.id_uuid = p_compuesto_uuid;
 END;
-$$;
+$procedure$
+;
 
 
 --actualizar compuesto
-CREATE OR REPLACE PROCEDURE core.p_actualizar_compuesto(
-    IN p_compuesto_uuid uuid,
-    IN p_nombre text,
-    IN p_formula_quimica text,
-    IN p_masa_molar numeric,
-    IN p_estado_agregacion text,
-    IN p_elementos text
-)
-LANGUAGE plpgsql
+CREATE OR REPLACE PROCEDURE core.p_actualizar_compuesto(IN p_compuesto_uuid uuid, IN p_nombre text, IN p_formula_quimica text, IN p_masa_molar numeric, IN p_estado_agregacion text, IN p_elementos text)
+ LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     v_elemento JSON;
@@ -334,7 +308,7 @@ BEGIN
     FOR v_elemento IN
     SELECT * FROM json_array_elements(p_elementos::json)
     LOOP
-        v_elemento_uuid := (v_elemento->>'elemento_uuid')::UUID;
+        v_elemento_uuid := (v_elemento->>'uuid')::UUID;
         v_cantidad_atomos := (v_elemento->>'cantidad_atomos')::INT;
 
         RAISE NOTICE 'Elemento UUID: %, Cantidad de átomos: %', v_elemento_uuid, v_cantidad_atomos;
@@ -345,7 +319,9 @@ BEGIN
         AND elemento_uuid = v_elemento_uuid;
     END LOOP;
 END;
-$procedure$;
+$procedure$
+;
+
 
 -- Insertar un nuevo compuesto incluyendo elementos
 CREATE OR REPLACE PROCEDURE core.p_insertar_compuesto(IN p_nombre text, IN p_formula_quimica text, IN p_masa_molar numeric, IN p_estado_agregacion text, IN p_elementos text)
@@ -378,11 +354,11 @@ $procedure$
 
 
 
+
 -- Eliminar un compuesto
-create or replace procedure core.p_eliminar_compuesto(
-    in p_compuesto_uuid uuid
-)
-language plpgsql as $$
+CREATE OR REPLACE PROCEDURE core.p_eliminar_compuesto(IN p_compuesto_uuid uuid)
+ LANGUAGE plpgsql
+AS $procedure$
 
 declare
     l_total_registros integer;
@@ -401,52 +377,9 @@ begin
     delete from core.compuestos
     where id_uuid = p_compuesto_uuid;
 
-end; $$;
+end; $procedure$
+;
 
 
---***************
---zona de pruebas
---***************
-
-call core.p_insertar_elemento('Fosforo', 'fo', 15, '1s1 1s3');
-select * from core.v_info_elementos;
-call core.p_obtener_elemento_por_guid('123e4567-e89b-12d3-a456-426614174000');
-call core.p_actualizar_elemento('49c9e626-61af-476f-8e21-e39c2aeb26aa', 'Hidrógeno Actualizado', 'H', 1, '1s1 Actualizado');
-call core.p_eliminar_elemento('49c9e626-61af-476f-8e21-e39c2aeb26aa');
-
--- Insertar Hidrógeno
-INSERT INTO core.elementos (id_uuid, nombre, simbolo, numero_atomico, config_electronica)
-VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Hidrógeno', 'H', 1, '1s1');
-
--- Insertar Oxígeno
-INSERT INTO core.elementos (id_uuid, nombre, simbolo, numero_atomico, config_electronica)
-VALUES ('987e4567-e89b-12d3-a456-426614174111', 'Oxígeno', 'O', 8, '1s2 2s2 2p4');
 
 
-call core.p_insertar_compuesto(
-    'Agua',
-    'H2O',
-    18.015,
-    'Líquido',
-    '[{"elemento_uuid": "123e4567-e89b-12d3-a456-426614174000", "cantidad_atomos": 2}, {"elemento_uuid": "987e4567-e89b-12d3-a456-426614174111", "cantidad_atomos": 1}]'
-);
-
-select * from core.compuestos;
-select * from core.elementos;
-select * from core.v_info_compuestos;
-select * from core.v_info_elementos;
-
-CALL core.p_actualizar_compuesto(
-    '33219da0-c9c1-49f5-8bfc-f407e36d233f',
-    'Agua Modificada',
-    'H2O',
-    18.015,
-    'Líquido Modificado',
-    '[{"elemento_uuid": "123e4567-e89b-12d3-a456-426614174000", "cantidad_atomos": 2},
-      {"elemento_uuid": "987e4567-e89b-12d3-a456-426614174111", "cantidad_atomos": 1}]'::json
-);
-
-call core.p_eliminar_compuesto('33219da0-c9c1-49f5-8bfc-f407e36d233f');
-call core.p_obtener_compuesto_por_guid('1d145cbd-d06d-4cf0-8f35-214caf413cd2');
-
-select * from core.v_info_compuestos;

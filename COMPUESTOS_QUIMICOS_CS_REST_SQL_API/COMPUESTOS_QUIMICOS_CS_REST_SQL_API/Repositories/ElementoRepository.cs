@@ -68,19 +68,6 @@ namespace COMPUESTOS_QUIMICOS_CS_REST_SQL_API.Repositories
             return elementoExistente;
         }
 
-        //public async Task<Guid> GetGuidByNameAsync(string nombre)
-        //{
-        //    var conexion = contextoDB.CreateConnection();
-
-        //    DynamicParameters parametrosSentencia = new();
-        //    parametrosSentencia.Add("@elementoNombre", nombre,
-        //                            DbType.String, ParameterDirection.Input);
-        //    string sentenciaSQL = "SELECT id_uuid uuid" +
-        //        " FROM core.v_info_elementos WHERE LOWER(nombre) = LOWER(@elementoNombre)";
-
-
-        //}
-
         public async Task<bool> CreateAsync(Elemento unElemento)
         {
             bool resultadoAccion = false;
