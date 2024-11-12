@@ -119,10 +119,11 @@ El modelo de datos incluye las siguientes entidades principales:
 - **Control de Errores**: La API implementa excepciones personalizadas (`AppValidationException`, `DbOperationException`) para el control de errores y manejo de validaciones.
 
 ## Contacto
-- **Juan Dario Rodas** - [juand.rodasm@upb.edu.co](mailto:juand.rodasm@upb.edu.co)
 - **Carlos Andres Sanabria** - [carlos.sanabria@upb.edu.co](mailto:carlos.sanabria@upb.edu.co)
 - **Emanuel Rios Bolivar** - [emanuel.riosb@upb.edu.co](mailto:emanuel.riosb@upb.edu.co)
 
+## Referencias
+- **Michipedia** (https://github.com/jdrodas/Michipedia.git)
 
 
 
